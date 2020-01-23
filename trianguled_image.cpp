@@ -17,7 +17,7 @@ bool Trianguled_image::openImage(const QString &fileName)
     resizeImage(&loadedImage, newSize);
     resize(newSize);
     image = loadedImage;
-
+    backupImage = image;
     for(QPoint* curr_point : points) {
         delete(curr_point);
     }
@@ -90,13 +90,55 @@ void Trianguled_image::triangulate()
     qInfo() << "finish tri";
 }
 
+int Trianguled_image::getPointValue(QPoint point){
+    return image.pixelColor(point).red();
+}
+
+
+QPoint Trianguled_image::getBestPoint(QPoint point){
+    int px = point.x();
+    int py = point.y();
+    double distToPoint;
+    QPoint point_res = point;
+    int point_res_value = getPointValue(point);
+    QPoint point_tmp;
+    int point_tmp_value;
+
+    for(int i=(-1)*vision_range+px ; i<vision_range+px ; i++){
+        if(i>=0 && i<image.width()){
+            for(int j=(-1)*vision_range+py ; j<vision_range+py ; j++){
+                if(j>=0 && j<image.height()){
+                    distToPoint = sqrt(pow(i-px, 2)+pow(j-py, 2));
+                    if(distToPoint<=vision_range){
+                        point_tmp = QPoint(i,j);
+                        point_tmp_value = getPointValue(point_tmp);
+                        if(point_tmp_value < point_res_value){
+                            printf("Res : %d \nTmp : %d\n\n", i,j);
+                            point_res = point_tmp;
+                            point_res_value = point_tmp_value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    update();
+    return point_res;
+}
+
+
 bool Trianguled_image::triangulate_step()
 {
+    QPoint best_point;
     for(QPoint* curr_point : points) {
-        int dx = QRandomGenerator::global()->bounded(-2, 2);
-        int dy = QRandomGenerator::global()->bounded(-2, 2);
-        curr_point->setX(curr_point->x() + dx);
-        curr_point->setY(curr_point->y() + dy);
+        best_point = getBestPoint(*curr_point);
+        curr_point->setX(best_point.x());
+        curr_point->setY(best_point.y());
+
+//        int dx = QRandomGenerator::global()->bounded(-2, 2);
+//        int dy = QRandomGenerator::global()->bounded(-2, 2);
+//        curr_point->setX(curr_point->x() + dx);
+//        curr_point->setY(curr_point->y() + dy);
     }
     update();
     return false;

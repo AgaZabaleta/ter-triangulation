@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <QWidget>
+#include <math.h>
 
 class Trianguled_image : public QWidget
 {
@@ -29,6 +30,9 @@ private:
     void resizeImage(QImage *image, const QSize &newSize);
 
     bool triangulate_step();
+    QPoint getBestPoint(QPoint point);
+    int vision_range = 50;
+    int getPointValue(QPoint point);
 };
 
 #endif // TRIANGULED_IMAGE_H
