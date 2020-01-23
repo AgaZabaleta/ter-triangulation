@@ -9,13 +9,11 @@ Trianguled_image::Trianguled_image(QWidget *parent):QWidget(parent), points()
 }
 
 bool Trianguled_image::openImage(const QString &fileName)
-//! [1] //! [2]
 {
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-
-    QSize newSize = loadedImage.size().expandedTo(size());
+    QSize newSize = size();
     resizeImage(&loadedImage, newSize);
     resize(newSize);
     image = loadedImage;
@@ -30,7 +28,6 @@ bool Trianguled_image::openImage(const QString &fileName)
 }
 
 bool Trianguled_image::saveImage(const QString &fileName, const char *fileFormat)
-//! [3] //! [4]
 {
     QImage visibleImage = image;
     resizeImage(&visibleImage, size());
@@ -43,20 +40,16 @@ bool Trianguled_image::saveImage(const QString &fileName, const char *fileFormat
 }
 
 void Trianguled_image::resizeImage(QImage *image, const QSize &newSize)
-//! [19] //! [20]
 {
     if (image->size() == newSize)
         return;
-
-    QImage newImage(newSize, QImage::Format_RGB32);
-    newImage.fill(qRgb(255, 255, 255));
+    QImage newImage = image->scaled(newSize.width(), newSize.height());
     QPainter painter(&newImage);
-    painter.drawImage(QPoint(0, 0), *image);
     *image = newImage;
+    painter.drawImage(QPoint(0, 0), *image);
 }
 
 void Trianguled_image::paintEvent(QPaintEvent *event)
-//! [13] //! [14]
 {
 
     QPainter painter(this);
@@ -70,6 +63,21 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
             painter.drawPoint(*curr_point);
             painter.drawImage(QPoint(0,0), triangles);
         }
+    }
+}
+
+void Trianguled_image::transformToGrey(){
+    if(!image.isNull()) {
+        if(image.allGray()){
+            image = backupImage;
+        }else{
+            backupImage = image;
+            image = image.convertToFormat(QImage::Format_Grayscale8);
+        }
+        update();
+        qInfo() << "Image transformed";
+    } else {
+        qInfo() << "No image to transform";
     }
 }
 
@@ -93,6 +101,22 @@ bool Trianguled_image::triangulate_step()
     update();
     return false;
 }
+
+void Trianguled_image::addPoints(){
+    if(!image.isNull()) {
+        int scale = 50;
+        for(int i=0 ; i<image.width() ; i+=scale){
+            for(int j=0 ; j<image.height() ; j+=scale){
+                points.push_back(new QPoint(i, j));
+            }
+        }
+        update();
+    } else {
+        qInfo() << "No image to add points";
+    }
+}
+
+
 void Trianguled_image::addRandomPoint()
 {
     if(!image.isNull()) {

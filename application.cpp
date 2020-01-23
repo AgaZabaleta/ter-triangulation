@@ -14,23 +14,31 @@ Application::Application(QWidget* parent):QWidget(parent), image_area(new Triang
 
     openButton = new QPushButton("Open", this);
     saveButton = new QPushButton("Save", this);
+    greyButton = new QPushButton("Shades of grey", this);
     stepButton = new QPushButton("Step", this);
     addPointButton = new QPushButton("Add point", this);
+    addAllPointsButton = new QPushButton("Add all points", this);
 
     openButton->setGeometry(QRect(QPoint(100,100), QSize(200,50)));
     saveButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
+    greyButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
     stepButton->setGeometry(QRect(QPoint(100,250), QSize(200,50)));
     addPointButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
+    addAllPointsButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
 
     connect(openButton, SIGNAL(released()), this, SLOT(open()));
     connect(saveButton, SIGNAL(released()), this, SLOT(save()));
+    connect(greyButton, SIGNAL(released()), this, SLOT(grey()));
     connect(stepButton, SIGNAL(released()), this, SLOT(step()));
     connect(addPointButton, SIGNAL(released()), this, SLOT(addPoint()));
+    connect(addAllPointsButton, SIGNAL(released()), this, SLOT(addAllPoints()));
 
     menu_layout->addWidget(openButton);
     menu_layout->addWidget(saveButton);
+    menu_layout->addWidget(greyButton);
     menu_layout->addWidget(stepButton);
     menu_layout->addWidget(addPointButton);
+    menu_layout->addWidget(addAllPointsButton);
 
     main_layout->addLayout(menu_layout, 1);
     main_layout->addWidget(image_area, 3);
@@ -38,43 +46,41 @@ Application::Application(QWidget* parent):QWidget(parent), image_area(new Triang
     setLayout(main_layout);
 
 }
-//! [0]
 
-//! [3]
 void Application::open()
-//! [3] //! [4]
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                tr("Open File"), QDir::currentPath());
     if (!fileName.isEmpty())
         image_area->openImage(fileName);
 }
-//! [4]
 
-//! [5]
 void Application::save()
-//! [5] //! [6]
 {
     QAction *action = qobject_cast<QAction *>(sender());
     QByteArray fileFormat = action->data().toByteArray();
     saveFile(fileFormat);
 }
-//! [6]
 
 void Application::step()
 {
     image_area->triangulate();
 }
 
+void Application::grey(){
+    image_area->transformToGrey();
+}
 
 void Application::addPoint()
 {
     image_area->addRandomPoint();
 }
 
-//! [19]
+void Application::addAllPoints(){
+    image_area->addPoints();
+}
+
 bool Application::saveFile(const QByteArray &fileFormat)
-//! [19] //! [20]
 {
     QString initialPath = QDir::currentPath() + "/untitled." + fileFormat;
 
@@ -89,4 +95,3 @@ bool Application::saveFile(const QByteArray &fileFormat)
         return image_area->saveImage(fileName, fileFormat.constData());
     }
 }
-//! [20]

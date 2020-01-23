@@ -15,8 +15,10 @@ public:
 private slots:
     void open();
     void save();
+    void grey();
     void step();
     void addPoint();
+    void addAllPoints();
 
 private:
     bool saveFile(const QByteArray &fileFormat);
@@ -26,8 +28,11 @@ private:
 
     QPushButton *openButton;
     QPushButton *saveButton;
+    QPushButton *greyButton;
     QPushButton *stepButton;
     QPushButton *addPointButton;
+    QPushButton *addAllPointsButton;
+
 
     Trianguled_image *image_area;
 };
