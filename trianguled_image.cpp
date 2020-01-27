@@ -101,6 +101,7 @@ QPoint Trianguled_image::getBestPoint(QPoint point){
     double distToPoint;
     QPoint point_res = point;
     int point_res_value = getPointValue(point);
+    double point_res_dist = 0;
     QPoint point_tmp;
     int point_tmp_value;
 
@@ -113,9 +114,13 @@ QPoint Trianguled_image::getBestPoint(QPoint point){
                         point_tmp = QPoint(i,j);
                         point_tmp_value = getPointValue(point_tmp);
                         if(point_tmp_value < point_res_value){
-                            printf("Res : %d \nTmp : %d\n\n", i,j);
                             point_res = point_tmp;
                             point_res_value = point_tmp_value;
+                            point_res_dist = distToPoint;
+                        }else if(point_tmp_value == point_res_value && distToPoint<point_res_dist){
+                            point_res = point_tmp;
+                            point_res_value = point_tmp_value;
+                            point_res_dist = distToPoint;
                         }
                     }
                 }
@@ -126,19 +131,33 @@ QPoint Trianguled_image::getBestPoint(QPoint point){
     return point_res;
 }
 
+QPoint Trianguled_image::getNextPoint(QPoint p_origin, QPoint p_best){
+    QPoint p_next;
+    int x_move = 0;
+    int y_move = 0;
+    if(p_origin.x() != p_best.x()){
+        x_move = (p_best.x() - p_origin.x()) / abs(p_best.x() - p_origin.x());
+    }
+    if(p_origin.y() != p_best.y()){
+        y_move = (p_best.y() - p_origin.y()) / abs(p_best.y() - p_origin.y());
+    }
+    p_next.setX(p_origin.x() + x_move);
+    p_next.setY(p_origin.y() + y_move);
+    return p_next;
+}
+
 
 bool Trianguled_image::triangulate_step()
 {
     QPoint best_point;
+    QPoint next_point;
     for(QPoint* curr_point : points) {
         best_point = getBestPoint(*curr_point);
-        curr_point->setX(best_point.x());
-        curr_point->setY(best_point.y());
-
-//        int dx = QRandomGenerator::global()->bounded(-2, 2);
-//        int dy = QRandomGenerator::global()->bounded(-2, 2);
-//        curr_point->setX(curr_point->x() + dx);
-//        curr_point->setY(curr_point->y() + dy);
+        if(curr_point->x() != best_point.x() || curr_point->y() != best_point.y()){
+            next_point = getNextPoint(*curr_point, best_point);
+            curr_point->setX(next_point.x());
+            curr_point->setY(next_point.y());
+        }
     }
     update();
     return false;
@@ -146,9 +165,10 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        int scale = 50;
-        for(int i=0 ; i<image.width() ; i+=scale){
-            for(int j=0 ; j<image.height() ; j+=scale){
+        int scale_x = image.width() / 10;
+        int scale_y = image.height() / 10;
+        for(int i=0 ; i<image.width() ; i+=scale_x){
+            for(int j=0 ; j<image.height() ; j+=scale_y){
                 points.push_back(new QPoint(i, j));
             }
         }

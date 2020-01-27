@@ -33,6 +33,7 @@ private:
     QPoint getBestPoint(QPoint point);
     int vision_range = 50;
     int getPointValue(QPoint point);
+    QPoint getNextPoint(QPoint p_origin, QPoint p_best);
 };
 
 #endif // TRIANGULED_IMAGE_H
