@@ -5,11 +5,13 @@
 #include <QWidget>
 #include <math.h>
 
+#include "triangle.h"
+
 class Trianguled_image : public QWidget
 {
     Q_OBJECT
 public:
-    Trianguled_image(QWidget *parent = nullptr);
+    Trianguled_image(int n_columns, int n_rows, QWidget *parent = nullptr);
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void transformToGrey();
@@ -25,10 +27,13 @@ private:
     QImage backupImage; // Pour passer de gris à couleur
     QImage triangles;
     std::vector<QPoint*> points;
+    std::vector<Triangle*> tab_triangles;
     bool point_moved;
     int max_size = 500;
     void resizeImage(QImage *image, const QSize &newSize);
 
+    int n_y;
+    int n_x;
     bool triangulate_step();
     QPoint getBestPoint(QPoint point);
     int vision_range = 50;

@@ -4,13 +4,11 @@
 #include "trianguled_image.h"
 
 //! [0]
-Application::Application(QWidget* parent):QWidget(parent), image_area(new Trianguled_image(this))
+Application::Application(QWidget* parent):QWidget(parent), image_area(new Trianguled_image(10, 10, this))
 {
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     main_layout = new QHBoxLayout();
     menu_layout = new QVBoxLayout();
-
-    image_area = new Trianguled_image;
 
     openButton = new QPushButton("Open", this);
     saveButton = new QPushButton("Save", this);

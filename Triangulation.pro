@@ -19,11 +19,13 @@ SOURCES += \
     application.cpp \
     main.cpp \
     mainwindow.cpp \
+    triangle.cpp \
     trianguled_image.cpp
 
 HEADERS += \
     application.h \
     mainwindow.h \
+    triangle.h \
     trianguled_image.h
 
 FORMS += \

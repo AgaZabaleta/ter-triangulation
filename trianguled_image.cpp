@@ -1,11 +1,9 @@
 #include <QtWidgets>
 #include "trianguled_image.h"
 
-Trianguled_image::Trianguled_image(QWidget *parent):QWidget(parent), points()
+Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent):n_y(n_rows), n_x(n_columns), QWidget(parent), points(n_rows * n_columns), tab_triangles()
 {
     setAttribute(Qt::WA_StaticContents);
-
-
 }
 
 bool Trianguled_image::openImage(const QString &fileName)
@@ -58,11 +56,18 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
 
     if(!image.isNull()){
         for(QPoint* curr_point : points) {
-            qInfo() << "Point drawn : " << curr_point->x() << " " << curr_point->y();
+
             painter.setPen(QPen(QColor(255,0,0), 10, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
             painter.drawPoint(*curr_point);
             painter.drawImage(QPoint(0,0), triangles);
         }
+        if(tab_triangles.size() > 0) {
+            painter.setPen(QPen(QColor(0,0,0), 1, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
+            for(Triangle* curr_triangle : tab_triangles) {
+                curr_triangle->draw_triangle(&painter);
+            }
+        }
+
     }
 }
 
@@ -165,13 +170,18 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        int scale_x = image.width() / 10;
-        int scale_y = image.height() / 10;
-        for(int i=0 ; i<image.width() ; i+=scale_x){
-            for(int j=0 ; j<image.height() ; j+=scale_y){
-                points.push_back(new QPoint(i, j));
+        int scale_x = image.width() / n_x;
+        int scale_y = image.height() / n_y;
+
+        for(int i=0 ; i<n_x+1 ; i++){
+            for(int j=0 ; j<n_y+1 ; j++){
+                points.push_back(new QPoint(i*scale_x, j*scale_y));
             }
         }
+        for(int i = 0; i<2; i++) {
+        for(int j = 0; j<2; j++) {
+            tab_triangles.push_back(new Triangle(points[j*n_x+i], points[j*n_x+i+1], points[(j+1)*n_x+i]));
+        }}
         update();
     } else {
         qInfo() << "No image to add points";
