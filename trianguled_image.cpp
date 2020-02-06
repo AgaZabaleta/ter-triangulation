@@ -170,18 +170,26 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        int scale_x = image.width() / n_x;
-        int scale_y = image.height() / n_y;
+        float scale_x = image.width() / static_cast<float>(n_x-1);
+        float scale_y = image.height() / static_cast<float>(n_y-1);
 
-        for(int i=0 ; i<n_x+1 ; i++){
-            for(int j=0 ; j<n_y+1 ; j++){
-                points.push_back(new QPoint(i*scale_x, j*scale_y));
+        for(int i=0 ; i<n_x ; i++){
+            for(int j=0 ; j<n_y ; j++){
+                points.push_back(new QPoint(static_cast<int>(i*scale_x), static_cast<int>(j*scale_y)));
             }
         }
-        for(int i = 0; i<2; i++) {
-        for(int j = 0; j<2; j++) {
-            tab_triangles.push_back(new Triangle(points[j*n_x+i], points[j*n_x+i+1], points[(j+1)*n_x+i]));
-        }}
+        for(int i = 0; i<n_x-1; i++) {
+            for(int j = 0; j<n_y-1; j++) {
+                tab_triangles.push_back(new Triangle(points[i*n_y+j], points[i*n_y+j+1], points[(i+1)*n_y+j]));
+            }
+        }
+
+        for(int i = 1; i<n_x; i++) {
+            for(int j = 1; j<n_y; j++) {
+                tab_triangles.push_back(new Triangle(points[i*n_y+j], points[(i-1)*n_y+j], points[i*n_y+j-1]));
+            }
+        }
+
         update();
     } else {
         qInfo() << "No image to add points";
