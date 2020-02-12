@@ -1,7 +1,7 @@
 #include <QtWidgets>
 #include "trianguled_image.h"
 
-Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent):n_y(n_rows), n_x(n_columns), QWidget(parent), points(n_rows * n_columns), tab_triangles()
+Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent): QWidget(parent), n_y(n_rows), n_x(n_columns), points(n_rows * n_columns), tab_triangles()
 {
     setAttribute(Qt::WA_StaticContents);
 }
@@ -51,10 +51,24 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
 {
 
     QPainter painter(this);
-    QRect dirtyRect = event->rect();
-    painter.drawImage(dirtyRect, image, dirtyRect);
+
 
     if(!image.isNull()){
+        QRect dirtyRect = event->rect();
+
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        QSize pixSize = image.size();
+        pixSize.scale(event->rect().size(), Qt::KeepAspectRatio);
+
+        QImage scaledImage = image.scaled(pixSize,
+                                       Qt::KeepAspectRatio,
+                                       Qt::SmoothTransformation
+                                       );
+
+
+        painter.drawImage(dirtyRect, scaledImage, dirtyRect);
+
         for(QPoint* curr_point : points) {
 
             painter.setPen(QPen(QColor(255,0,0), 10, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
