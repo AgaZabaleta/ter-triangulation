@@ -3,6 +3,8 @@
 
 #include <QtWidgets>
 
+#include "opengl_triangles.h"
+
 class Trianguled_image;
 
 class Application : public QWidget
@@ -35,6 +37,7 @@ private:
 
 
     Trianguled_image *image_area;
+    OpenGLTriangles *opengl_area;
 };
 
 #endif

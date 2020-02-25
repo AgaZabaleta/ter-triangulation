@@ -4,7 +4,10 @@
 #include "trianguled_image.h"
 
 //! [0]
-Application::Application(QWidget* parent):QWidget(parent), image_area(new Trianguled_image(10, 10, this))
+Application::Application(QWidget* parent) :
+    QWidget(parent),
+    image_area(new Trianguled_image(10, 10, this)),
+    opengl_area(new OpenGLTriangles(this))
 {
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     main_layout = new QHBoxLayout();
@@ -40,6 +43,7 @@ Application::Application(QWidget* parent):QWidget(parent), image_area(new Triang
 
     main_layout->addLayout(menu_layout, 1);
     main_layout->addWidget(image_area, 3);
+    main_layout->addWidget(opengl_area, 3);
 
     setLayout(main_layout);
 

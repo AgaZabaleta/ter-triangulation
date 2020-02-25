@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -19,12 +19,14 @@ SOURCES += \
     application.cpp \
     main.cpp \
     mainwindow.cpp \
+    opengl_triangles.cpp \
     triangle.cpp \
     trianguled_image.cpp
 
 HEADERS += \
     application.h \
     mainwindow.h \
+    opengl_triangles.h \
     triangle.h \
     trianguled_image.h
 
