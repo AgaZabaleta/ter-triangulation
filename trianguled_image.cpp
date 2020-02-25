@@ -20,7 +20,11 @@ bool Trianguled_image::openImage(const QString &fileName)
     for(QPointF* curr_point : points) {
         delete(curr_point);
     }
+    for(Triangle* curr_triangle : tab_triangles) {
+        delete(curr_triangle);
+    }
     points.clear();
+    tab_triangles.clear();
 
     update();
     return true;
