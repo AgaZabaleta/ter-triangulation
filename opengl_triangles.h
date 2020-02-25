@@ -19,10 +19,6 @@ private:
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_vbo;
     QOpenGLShaderProgram *m_program;
-    QOpenGLShader *m_shader;
-    GLuint m_posAttr;
-    GLuint m_colAttr;
-    GLuint m_matrixUniform;
 };
 
 #endif // OPENGL_TRIANGLES_H
