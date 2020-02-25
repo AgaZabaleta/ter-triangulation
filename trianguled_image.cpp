@@ -17,7 +17,7 @@ bool Trianguled_image::openImage(const QString &fileName)
 //    resize(newSize);
     image = loadedImage;
 
-    for(QPoint* curr_point : points) {
+    for(QPointF* curr_point : points) {
         delete(curr_point);
     }
     points.clear();
@@ -72,18 +72,21 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
 
 //        painter.drawImage(dirtyRect, image, dirtyRect);
 
-        for(QPoint* curr_point : points) {
-
+        for(QPointF* real_point : points) {
+            QPoint curr_point(
+                        static_cast<int>(real_point->x()*scaledImage.width()),
+                        static_cast<int>(real_point->y()*scaledImage.height())
+                        );
             painter.setPen(QPen(QColor(255,0,0), 10, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
-            painter.drawPoint(*curr_point);
+            painter.drawPoint(curr_point);
             painter.drawImage(QPoint(0,0), triangles);
         }
-        if(tab_triangles.size() > 0) {
-            painter.setPen(QPen(QColor(0,0,0), 1, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
-            for(Triangle* curr_triangle : tab_triangles) {
-                curr_triangle->draw_triangle(&painter);
-            }
-        }
+//        if(tab_triangles.size() > 0) {
+//            painter.setPen(QPen(QColor(0,0,0), 1, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
+//            for(Triangle* curr_triangle : tab_triangles) {
+//                curr_triangle->draw_triangle(&painter);
+//            }
+//        }
 
     }
 }
@@ -173,12 +176,17 @@ bool Trianguled_image::triangulate_step()
 {
     QPoint best_point;
     QPoint next_point;
-    for(QPoint* curr_point : points) {
-        best_point = getBestPoint(*curr_point);
-        if(curr_point->x() != best_point.x() || curr_point->y() != best_point.y()){
-            next_point = getNextPoint(*curr_point, best_point);
-            curr_point->setX(next_point.x());
-            curr_point->setY(next_point.y());
+
+    for(QPointF* real_point : points) {
+        QPoint curr_point(static_cast<int>(real_point->x()*image.width()), static_cast<int>(real_point->y()*image.height()));
+        best_point = getBestPoint(curr_point);
+        if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
+            next_point = getNextPoint(curr_point, best_point);
+            curr_point.setX(next_point.x());
+            curr_point.setY(next_point.y());
+
+            real_point->setX(curr_point.x() / static_cast<double>(image.width()));
+            real_point->setY(curr_point.y() / static_cast<double>(image.height()));
         }
     }
     update();
@@ -187,23 +195,26 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        float scale_x = image.width() / static_cast<float>(n_x-1);
-        float scale_y = image.height() / static_cast<float>(n_y-1);
+        double scale_x = image.width() / static_cast<double>(n_x-1);
+        double scale_y = image.height() / static_cast<double>(n_y-1);
 
         for(int i=0 ; i<n_x ; i++){
             for(int j=0 ; j<n_y ; j++){
-                points.push_back(new QPoint(static_cast<int>(i*scale_x), static_cast<int>(j*scale_y)));
+                double pos_x = (i*scale_x) / static_cast<double>(image.width());
+                double pos_y = (j*scale_y) / static_cast<double>(image.height());
+
+                points.push_back(new QPointF(pos_x, pos_y));
             }
         }
         for(int i = 0; i<n_x-1; i++) {
             for(int j = 0; j<n_y-1; j++) {
-                tab_triangles.push_back(new Triangle(points[i*n_y+j], points[i*n_y+j+1], points[(i+1)*n_y+j]));
+                tab_triangles.push_back(new Triangle(i*n_y+j, i*n_y+j+1, (i+1)*n_y+j));
             }
         }
 
         for(int i = 1; i<n_x; i++) {
             for(int j = 1; j<n_y; j++) {
-                tab_triangles.push_back(new Triangle(points[i*n_y+j], points[(i-1)*n_y+j], points[i*n_y+j-1]));
+                tab_triangles.push_back(new Triangle(i*n_y+j, (i-1)*n_y+j, i*n_y+j-1));
             }
         }
 
@@ -216,14 +227,14 @@ void Trianguled_image::addPoints(){
 
 void Trianguled_image::addRandomPoint()
 {
-    if(!image.isNull()) {
-        qInfo() << "Added point";
-        int x = QRandomGenerator::global()->bounded(0, image.width());
-        int y = QRandomGenerator::global()->bounded(0, image.height());
-        points.push_back(new QPoint(x, y));
+//    if(!image.isNull()) {
+//        qInfo() << "Added point";
+//        int x = QRandomGenerator::global()->bounded(0, image.width());
+//        int y = QRandomGenerator::global()->bounded(0, image.height());
+//        points.push_back(new QPoint(x, y));
 
-        update();
-    } else {
-        qInfo() << "No image to add point";
-    }
+//        update();
+//    } else {
+//        qInfo() << "No image to add point";
+//    }
 }

@@ -6,12 +6,12 @@
 class Triangle
 {
 public:
-    Triangle(QPoint* p1, QPoint* p2, QPoint* p3);
-    void draw_triangle(QPainter* painter);
+    Triangle(int p1, int p2, int p3);
+//    void draw_triangle(QPainter* painter);
 private:
-    QPoint* p1;
-    QPoint* p2;
-    QPoint* p3;
+    int p1;
+    int p2;
+    int p3;
 };
 
 #endif // TRIANGLE_H

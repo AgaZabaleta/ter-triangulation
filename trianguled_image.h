@@ -26,7 +26,7 @@ private:
     QImage image;
     QImage backupImage; // Pour passer de gris à couleur
     QImage triangles;
-    std::vector<QPoint*> points;
+    std::vector<QPointF*> points;
     std::vector<Triangle*> tab_triangles;
     bool point_moved;
     int max_size = 500;
