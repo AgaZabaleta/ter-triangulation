@@ -81,12 +81,24 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
             painter.drawPoint(curr_point);
             painter.drawImage(QPoint(0,0), triangles);
         }
-//        if(tab_triangles.size() > 0) {
-//            painter.setPen(QPen(QColor(0,0,0), 1, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
-//            for(Triangle* curr_triangle : tab_triangles) {
-//                curr_triangle->draw_triangle(&painter);
-//            }
-//        }
+        if(tab_triangles.size() > 0) {
+            painter.setPen(QPen(QColor(0,0,0), 1, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
+            for(Triangle* curr_triangle : tab_triangles) {
+                QPoint p1(static_cast<int>(points[curr_triangle->getP1()]->x() * scaledImage.width()),
+                          static_cast<int>(points[curr_triangle->getP1()]->y() * scaledImage.height())
+                        );
+                QPoint p2(static_cast<int>(points[curr_triangle->getP2()]->x() * scaledImage.width()),
+                          static_cast<int>(points[curr_triangle->getP2()]->y() * scaledImage.height())
+                        );
+                QPoint p3(static_cast<int>(points[curr_triangle->getP3()]->x() * scaledImage.width()),
+                          static_cast<int>(points[curr_triangle->getP3()]->y() * scaledImage.height())
+                        );
+
+                painter.drawLine(p1, p2);
+                painter.drawLine(p2, p3);
+                painter.drawLine(p3, p1);
+            }
+        }
 
     }
 }

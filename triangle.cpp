@@ -4,6 +4,36 @@ Triangle::Triangle(int point1, int point2, int point3) : p1(point1), p2(point2),
 {
 }
 
+int Triangle::getP1() const
+{
+    return p1;
+}
+
+void Triangle::setP1(int value)
+{
+    p1 = value;
+}
+
+int Triangle::getP2() const
+{
+    return p2;
+}
+
+void Triangle::setP2(int value)
+{
+    p2 = value;
+}
+
+int Triangle::getP3() const
+{
+    return p3;
+}
+
+void Triangle::setP3(int value)
+{
+    p3 = value;
+}
+
 //void Triangle::draw_triangle(QPainter* painter)
 //{
 //    qInfo() << "Point drawn : " << p1->x() << " " << p1->y();
