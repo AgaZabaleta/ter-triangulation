@@ -11,11 +11,12 @@ bool Trianguled_image::openImage(const QString &fileName)
     QImage loadedImage;
     if (!loadedImage.load(fileName))
         return false;
-    QSize newSize = size();
-    resizeImage(&loadedImage, newSize);
-    resize(newSize);
+    backupImage = loadedImage;
+//    QSize newSize = size();
+//    resizeImage(&loadedImage, newSize);
+//    resize(newSize);
     image = loadedImage;
-    backupImage = image;
+
     for(QPoint* curr_point : points) {
         delete(curr_point);
     }
@@ -41,7 +42,7 @@ void Trianguled_image::resizeImage(QImage *image, const QSize &newSize)
 {
     if (image->size() == newSize)
         return;
-    QImage newImage = image->scaled(newSize.width(), newSize.height());
+    QImage newImage = image->scaled(newSize.width(), newSize.height(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     QPainter painter(&newImage);
     *image = newImage;
     painter.drawImage(QPoint(0, 0), *image);
@@ -65,9 +66,11 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
                                        Qt::KeepAspectRatio,
                                        Qt::SmoothTransformation
                                        );
-
-
         painter.drawImage(dirtyRect, scaledImage, dirtyRect);
+//        QSize newSize = event->rect().size();
+//        resizeImage(&image, newSize);
+
+//        painter.drawImage(dirtyRect, image, dirtyRect);
 
         for(QPoint* curr_point : points) {
 
