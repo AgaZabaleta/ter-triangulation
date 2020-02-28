@@ -1,7 +1,4 @@
-#include <QtWidgets>
-
 #include "application.h"
-#include "trianguled_image.h"
 
 //! [0]
 Application::Application(QWidget* parent) :
@@ -9,6 +6,8 @@ Application::Application(QWidget* parent) :
     image_area(new Trianguled_image(10, 10, this)),
     opengl_area(new OpenGLTriangles(this))
 {
+    opengl_area->linkTrianguledImage(image_area);
+
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     main_layout = new QHBoxLayout();
     menu_layout = new QVBoxLayout();
@@ -67,6 +66,7 @@ void Application::save()
 void Application::step()
 {
     image_area->triangulate();
+    opengl_area->update();
 }
 
 void Application::grey(){
@@ -80,6 +80,7 @@ void Application::addPoint()
 
 void Application::addAllPoints(){
     image_area->addPoints();
+    opengl_area->update();
 }
 
 bool Application::saveFile(const QByteArray &fileFormat)

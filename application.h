@@ -4,6 +4,7 @@
 #include <QtWidgets>
 
 #include "opengl_triangles.h"
+#include "trianguled_image.h"
 
 class Trianguled_image;
 

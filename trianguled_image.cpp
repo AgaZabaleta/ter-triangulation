@@ -254,3 +254,11 @@ void Trianguled_image::addRandomPoint()
 //        qInfo() << "No image to add point";
 //    }
 }
+
+std::vector<QPointF*> Trianguled_image::getPoints(){
+    return this->points;
+}
+
+std::vector<Triangle*> Trianguled_image::getTriangles(){
+    return this->tab_triangles;
+}

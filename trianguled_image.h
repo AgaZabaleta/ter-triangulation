@@ -18,7 +18,8 @@ public:
     void triangulate();
     void addRandomPoint();
     void addPoints();
-
+    std::vector<QPointF*> getPoints();
+    std::vector<Triangle*> getTriangles();
 protected:
     void paintEvent(QPaintEvent *event) override;
 
