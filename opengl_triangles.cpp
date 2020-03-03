@@ -100,11 +100,31 @@ int OpenGLTriangles::updateVertices(){
 
     for(Triangle* t : t_image->getTriangles()){
 
+        double r = 0;
+        double g = 0;
+        double b = 0;
+
+        v_color = t_image->getPointColor(t->getP1());
+        r += v_color.redF();
+        g += v_color.greenF();
+        b += v_color.blueF();
+        v_color = t_image->getPointColor(t->getP2());
+        r += v_color.redF();
+        g += v_color.greenF();
+        b += v_color.blueF();
+        v_color = t_image->getPointColor(t->getP3());
+        r += v_color.redF();
+        g += v_color.greenF();
+        b += v_color.blueF();
+
+        v_color.setRedF(r / 3.0);
+        v_color.setGreenF(g / 3.0);
+        v_color.setBlueF(b / 3.0);
+
         vertices.push_back(QPointToPositionX(*(t_points[t->getP1()])) * adapt_x);
         vertices.push_back(QPointToPositionY(*(t_points[t->getP1()])) * adapt_y);
         vertices.push_back(0.0f);
 
-        v_color = t_image->getPointColor(t->getP1());
         vertices.push_back(v_color.redF());
         vertices.push_back(v_color.greenF());
         vertices.push_back(v_color.blueF());
@@ -113,7 +133,6 @@ int OpenGLTriangles::updateVertices(){
         vertices.push_back(QPointToPositionY(*(t_points[t->getP2()])) * adapt_y);
         vertices.push_back(0.0f);
 
-        v_color = t_image->getPointColor(t->getP2());
         vertices.push_back(v_color.redF());
         vertices.push_back(v_color.greenF());
         vertices.push_back(v_color.blueF());
@@ -122,7 +141,6 @@ int OpenGLTriangles::updateVertices(){
         vertices.push_back(QPointToPositionY(*(t_points[t->getP3()])) * adapt_y);
         vertices.push_back(0.0f);
 
-        v_color = t_image->getPointColor(t->getP3());
         vertices.push_back(v_color.redF());
         vertices.push_back(v_color.greenF());
         vertices.push_back(v_color.blueF());
