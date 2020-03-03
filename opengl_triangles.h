@@ -16,11 +16,16 @@ public:
 protected:
     void initializeGL() override;
     void paintGL() override;
-//    void resizeGL(int width, int height) override;
+    void resizeGL(int width, int height) override;
 
 private:
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_vbo;
+    QMatrix4x4 m_proj;
+    QMatrix4x4 m_camera;
+    QMatrix4x4 m_world;
+    int m_projMatrixLoc;
+    int m_mvMatrixLoc;
     QOpenGLShaderProgram *m_program;
     Trianguled_image *t_image;
 

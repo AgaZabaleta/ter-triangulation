@@ -211,8 +211,8 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        double scale_x = image.width() / static_cast<double>(n_x-1);
-        double scale_y = image.height() / static_cast<double>(n_y-1);
+        double scale_x = getScaleX();
+        double scale_y = getScaleY();
 
         for(int i=0 ; i<n_x ; i++){
             for(int j=0 ; j<n_y ; j++){
@@ -261,4 +261,12 @@ std::vector<QPointF*> Trianguled_image::getPoints(){
 
 std::vector<Triangle*> Trianguled_image::getTriangles(){
     return this->tab_triangles;
+}
+
+double Trianguled_image::getScaleX() {
+    return image.width() / static_cast<double>(n_x-1);
+}
+
+double Trianguled_image::getScaleY() {
+    return image.height() / static_cast<double>(n_y-1);
 }

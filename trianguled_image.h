@@ -20,6 +20,8 @@ public:
     void addPoints();
     std::vector<QPointF*> getPoints();
     std::vector<Triangle*> getTriangles();
+    double getScaleX();
+    double getScaleY();
 protected:
     void paintEvent(QPaintEvent *event) override;
 
