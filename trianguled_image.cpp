@@ -194,7 +194,7 @@ bool Trianguled_image::triangulate_step()
     QPoint next_point;
 
     for(QPointF* real_point : points) {
-        QPoint curr_point(static_cast<int>(real_point->x()*image.width()), static_cast<int>(real_point->y()*image.height()));
+        QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
         best_point = getBestPoint(curr_point);
         if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
             next_point = getNextPoint(curr_point, best_point);
@@ -272,7 +272,7 @@ double Trianguled_image::getScaleY() {
 }
 
 QColor Trianguled_image::getPointColor(int i) {
-    QPoint curr_point(static_cast<int>((points[i])->x()*image.width()), static_cast<int>((points[i])->y()*image.height()));
+    QPoint curr_point(static_cast<int>((points[i])->x()*(image.width()-1)), static_cast<int>((points[i])->y()*(image.height()-1)));
     return image.pixelColor(curr_point);
 }
 
