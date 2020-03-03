@@ -270,3 +270,9 @@ double Trianguled_image::getScaleX() {
 double Trianguled_image::getScaleY() {
     return image.height() / static_cast<double>(n_y-1);
 }
+
+QColor Trianguled_image::getPointColor(int i) {
+    QPoint curr_point(static_cast<int>((points[i])->x()*image.width()), static_cast<int>((points[i])->y()*image.height()));
+    return image.pixelColor(curr_point);
+}
+

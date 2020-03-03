@@ -22,6 +22,7 @@ public:
     std::vector<Triangle*> getTriangles();
     double getScaleX();
     double getScaleY();
+    QColor getPointColor(int i);
 protected:
     void paintEvent(QPaintEvent *event) override;
 
