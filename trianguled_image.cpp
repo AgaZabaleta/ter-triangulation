@@ -128,7 +128,7 @@ void Trianguled_image::triangulate()
         point_moved = triangulate_step();
     } while(point_moved);
 
-    qInfo() << "finish tri";
+    //qInfo() << "finish tri";
 }
 
 int Trianguled_image::getPointValue(QPoint point){
@@ -194,15 +194,18 @@ bool Trianguled_image::triangulate_step()
     QPoint next_point;
 
     for(QPointF* real_point : points) {
-        QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
-        best_point = getBestPoint(curr_point);
-        if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
-            next_point = getNextPoint(curr_point, best_point);
-            curr_point.setX(next_point.x());
-            curr_point.setY(next_point.y());
+        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
+            QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
+            best_point = getBestPoint(curr_point);
 
-            real_point->setX(curr_point.x() / static_cast<double>(image.width()));
-            real_point->setY(curr_point.y() / static_cast<double>(image.height()));
+            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
+                next_point = getNextPoint(curr_point, best_point);
+                curr_point.setX(next_point.x());
+                curr_point.setY(next_point.y());
+
+                real_point->setX(curr_point.x() / static_cast<double>(image.width()));
+                real_point->setY(curr_point.y() / static_cast<double>(image.height()));
+            }
         }
     }
     update();
@@ -219,6 +222,7 @@ void Trianguled_image::addPoints(){
                 double pos_x = (i*scale_x) / static_cast<double>(image.width());
                 double pos_y = (j*scale_y) / static_cast<double>(image.height());
 
+                //qInfo() << pos_x << " " << pos_y;
                 points.push_back(new QPointF(pos_x, pos_y));
             }
         }

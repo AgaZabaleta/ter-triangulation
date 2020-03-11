@@ -3,7 +3,7 @@
 //! [0]
 Application::Application(QWidget* parent) :
     QWidget(parent),
-    image_area(new Trianguled_image(10, 10, this)),
+    image_area(new Trianguled_image(15, 15, this)),
     opengl_area(new OpenGLTriangles(this))
 {
     opengl_area->linkTrianguledImage(image_area);
@@ -52,8 +52,10 @@ void Application::open()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
                                tr("Open File"), QDir::currentPath());
-    if (!fileName.isEmpty())
+    if (!fileName.isEmpty()) {
         image_area->openImage(fileName);
+        opengl_area->update();
+    }
 }
 
 void Application::save()

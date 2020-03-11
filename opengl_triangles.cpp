@@ -172,21 +172,22 @@ int OpenGLTriangles::updateVertices(){
 
 void OpenGLTriangles::paintGL()
 {
-    int nbTriangles = 1;
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f );
+    glClear(GL_COLOR_BUFFER_BIT);
+    int nbTriangles = 0;
     if(t_image->getTriangles().size() != 0){
         nbTriangles = updateVertices();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
-        m_program->bind();
-        m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
-        m_program->setUniformValue(m_projMatrixLoc, m_proj);
-        glDrawArrays(GL_TRIANGLES, 0, 3*nbTriangles);
+    }
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
-        m_program->release();
-    } 
+    m_program->bind();
+    m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
+    m_program->setUniformValue(m_projMatrixLoc, m_proj);
+    glDrawArrays(GL_TRIANGLES, 0, 3*nbTriangles);
+    m_program->release();
 }
 
 void OpenGLTriangles::resizeGL(int w, int h)
