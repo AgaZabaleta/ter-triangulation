@@ -5,6 +5,8 @@
 
 #include "opengl_triangles.h"
 #include "trianguled_image.h"
+#include "ui_saliencyform.h"
+#include "saliencyform.h"
 
 class Trianguled_image;
 
@@ -19,6 +21,8 @@ private slots:
     void open();
     void save();
     void grey();
+    void gradient();
+    void saliency();
     void step();
     void addPoint();
     void addAllPoints();
@@ -32,10 +36,13 @@ private:
     QPushButton *openButton;
     QPushButton *saveButton;
     QPushButton *greyButton;
+    QPushButton *gradientButton;
+    QPushButton *saliencyButton;
     QPushButton *stepButton;
     QPushButton *addPointButton;
     QPushButton *addAllPointsButton;
 
+    SaliencyForm *dialog;
 
     Trianguled_image *image_area;
     OpenGLTriangles *opengl_area;

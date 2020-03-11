@@ -15,6 +15,10 @@ public:
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
     void transformToGrey();
+    void saliency(double gradient_value, double color_value, double texture_value);
+    QImage gradient_saliency();
+    QImage color_saliency();
+    QImage texture_saliency();
     void triangulate();
     void addRandomPoint();
     void addPoints();
