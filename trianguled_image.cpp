@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <QtWidgets>
 #include "trianguled_image.h"
 
@@ -278,5 +279,62 @@ double Trianguled_image::getScaleY() {
 QColor Trianguled_image::getPointColor(int i) {
     QPoint curr_point(static_cast<int>((points[i])->x()*(image.width()-1)), static_cast<int>((points[i])->y()*(image.height()-1)));
     return image.pixelColor(curr_point);
+}
+
+bool within(double x)
+{
+    return 0 <= x && x <= 1;
+}
+
+bool in_triangle(QPoint p, QPoint a, QPoint b, QPoint c) {
+    double det = (b.y() - c.y())*(a.x() - c.x()) + (c.x() - b.x())*(a.y() - c.y());
+    double factor_alpha = (b.y() - c.y())*(p.x() - c.x()) + (c.x() - b.x())*(p.y() - c.y());
+    double factor_beta = (c.y() - a.y())*(p.x() - c.x()) + (a.x() - c.x())*(p.y() - c.y());
+    double alpha =  factor_alpha / det;
+    double beta =  factor_beta / det;
+    double gamma = 1.0 - alpha - beta;
+
+    return p == a || p == b || p == c || (within(alpha) && within(beta) && within(gamma));
+}
+
+QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
+    QColor result(0,0,0);
+
+    QPoint a(static_cast<int>((points[p1])->x()*(image.width()-1)), static_cast<int>((points[p1])->y()*(image.height()-1)));
+    QPoint b(static_cast<int>((points[p2])->x()*(image.width()-1)), static_cast<int>((points[p2])->y()*(image.height()-1)));
+    QPoint c(static_cast<int>((points[p3])->x()*(image.width()-1)), static_cast<int>((points[p3])->y()*(image.height()-1)));
+
+    QPoint p;
+    QColor p_color;
+    double red = 0;
+    double green = 0;
+    double blue = 0;
+    int n_pixel = 0;
+
+    int min_x = std::min(a.x(), std::min(b.x(), c.x()));
+    int min_y = std::min(a.y(), std::min(b.y(), c.y()));
+    int max_x = std::max(a.x(), std::max(b.x(), c.x()));
+    int max_y = std::max(a.y(), std::max(b.y(), c.y()));
+
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
+            p = QPoint(x, y);
+            if (in_triangle(p, a, b, c)) {
+                n_pixel++;
+                p_color = image.pixelColor(p);
+                red += p_color.redF();
+                blue += p_color.blueF();
+                green += p_color.greenF();
+            }
+        }
+    }
+
+    if(n_pixel > 0) {
+        result.setRedF(red / n_pixel);
+        result.setBlueF(blue / n_pixel);
+        result.setGreenF(green / n_pixel);
+    }
+
+    return result;
 }
 
