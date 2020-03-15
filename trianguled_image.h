@@ -20,6 +20,10 @@ public:
     void addPoints();
     std::vector<QPointF*> getPoints();
     std::vector<Triangle*> getTriangles();
+    double getScaleX();
+    double getScaleY();
+    QColor getPointColor(int i);
+    QColor getTriangleColor(int p1, int p2, int p3);
 protected:
     void paintEvent(QPaintEvent *event) override;
 

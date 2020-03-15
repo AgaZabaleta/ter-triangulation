@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <QtWidgets>
 #include "trianguled_image.h"
 
@@ -128,7 +129,7 @@ void Trianguled_image::triangulate()
         point_moved = triangulate_step();
     } while(point_moved);
 
-    qInfo() << "finish tri";
+    //qInfo() << "finish tri";
 }
 
 int Trianguled_image::getPointValue(QPoint point){
@@ -194,15 +195,18 @@ bool Trianguled_image::triangulate_step()
     QPoint next_point;
 
     for(QPointF* real_point : points) {
-        QPoint curr_point(static_cast<int>(real_point->x()*image.width()), static_cast<int>(real_point->y()*image.height()));
-        best_point = getBestPoint(curr_point);
-        if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
-            next_point = getNextPoint(curr_point, best_point);
-            curr_point.setX(next_point.x());
-            curr_point.setY(next_point.y());
+        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
+            QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
+            best_point = getBestPoint(curr_point);
 
-            real_point->setX(curr_point.x() / static_cast<double>(image.width()));
-            real_point->setY(curr_point.y() / static_cast<double>(image.height()));
+            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
+                next_point = getNextPoint(curr_point, best_point);
+                curr_point.setX(next_point.x());
+                curr_point.setY(next_point.y());
+
+                real_point->setX(curr_point.x() / static_cast<double>(image.width()));
+                real_point->setY(curr_point.y() / static_cast<double>(image.height()));
+            }
         }
     }
     update();
@@ -211,14 +215,15 @@ bool Trianguled_image::triangulate_step()
 
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
-        double scale_x = image.width() / static_cast<double>(n_x-1);
-        double scale_y = image.height() / static_cast<double>(n_y-1);
+        double scale_x = getScaleX();
+        double scale_y = getScaleY();
 
         for(int i=0 ; i<n_x ; i++){
             for(int j=0 ; j<n_y ; j++){
                 double pos_x = (i*scale_x) / static_cast<double>(image.width());
                 double pos_y = (j*scale_y) / static_cast<double>(image.height());
 
+                //qInfo() << pos_x << " " << pos_y;
                 points.push_back(new QPointF(pos_x, pos_y));
             }
         }
@@ -262,3 +267,74 @@ std::vector<QPointF*> Trianguled_image::getPoints(){
 std::vector<Triangle*> Trianguled_image::getTriangles(){
     return this->tab_triangles;
 }
+
+double Trianguled_image::getScaleX() {
+    return image.width() / static_cast<double>(n_x-1);
+}
+
+double Trianguled_image::getScaleY() {
+    return image.height() / static_cast<double>(n_y-1);
+}
+
+QColor Trianguled_image::getPointColor(int i) {
+    QPoint curr_point(static_cast<int>((points[i])->x()*(image.width()-1)), static_cast<int>((points[i])->y()*(image.height()-1)));
+    return image.pixelColor(curr_point);
+}
+
+bool within(double x)
+{
+    return 0 <= x && x <= 1;
+}
+
+bool in_triangle(QPoint p, QPoint a, QPoint b, QPoint c) {
+    double det = (b.y() - c.y())*(a.x() - c.x()) + (c.x() - b.x())*(a.y() - c.y());
+    double factor_alpha = (b.y() - c.y())*(p.x() - c.x()) + (c.x() - b.x())*(p.y() - c.y());
+    double factor_beta = (c.y() - a.y())*(p.x() - c.x()) + (a.x() - c.x())*(p.y() - c.y());
+    double alpha =  factor_alpha / det;
+    double beta =  factor_beta / det;
+    double gamma = 1.0 - alpha - beta;
+
+    return p == a || p == b || p == c || (within(alpha) && within(beta) && within(gamma));
+}
+
+QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
+    QColor result(0,0,0);
+
+    QPoint a(static_cast<int>((points[p1])->x()*(image.width()-1)), static_cast<int>((points[p1])->y()*(image.height()-1)));
+    QPoint b(static_cast<int>((points[p2])->x()*(image.width()-1)), static_cast<int>((points[p2])->y()*(image.height()-1)));
+    QPoint c(static_cast<int>((points[p3])->x()*(image.width()-1)), static_cast<int>((points[p3])->y()*(image.height()-1)));
+
+    QPoint p;
+    QColor p_color;
+    double red = 0;
+    double green = 0;
+    double blue = 0;
+    int n_pixel = 0;
+
+    int min_x = std::min(a.x(), std::min(b.x(), c.x()));
+    int min_y = std::min(a.y(), std::min(b.y(), c.y()));
+    int max_x = std::max(a.x(), std::max(b.x(), c.x()));
+    int max_y = std::max(a.y(), std::max(b.y(), c.y()));
+
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
+            p = QPoint(x, y);
+            if (in_triangle(p, a, b, c)) {
+                n_pixel++;
+                p_color = image.pixelColor(p);
+                red += p_color.redF();
+                blue += p_color.blueF();
+                green += p_color.greenF();
+            }
+        }
+    }
+
+    if(n_pixel > 0) {
+        result.setRedF(red / n_pixel);
+        result.setBlueF(blue / n_pixel);
+        result.setGreenF(green / n_pixel);
+    }
+
+    return result;
+}
+
