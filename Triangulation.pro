@@ -20,6 +20,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     opengl_triangles.cpp \
+    saliencyform.cpp \
     triangle.cpp \
     trianguled_image.cpp
 
@@ -27,11 +28,13 @@ HEADERS += \
     application.h \
     mainwindow.h \
     opengl_triangles.h \
+    saliencyform.h \
     triangle.h \
     trianguled_image.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    saliencyform.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

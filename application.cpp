@@ -15,6 +15,8 @@ Application::Application(QWidget* parent) :
     openButton = new QPushButton("Open", this);
     saveButton = new QPushButton("Save", this);
     greyButton = new QPushButton("Shades of grey", this);
+    gradientButton = new QPushButton("Saliency map : gradient ", this);
+    saliencyButton = new QPushButton("Saliency settings", this);
     stepButton = new QPushButton("Step", this);
     addPointButton = new QPushButton("Add point", this);
     addAllPointsButton = new QPushButton("Add all points", this);
@@ -22,6 +24,8 @@ Application::Application(QWidget* parent) :
     openButton->setGeometry(QRect(QPoint(100,100), QSize(200,50)));
     saveButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
     greyButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
+    gradientButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
+    saliencyButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
     stepButton->setGeometry(QRect(QPoint(100,250), QSize(200,50)));
     addPointButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
     addAllPointsButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
@@ -29,6 +33,8 @@ Application::Application(QWidget* parent) :
     connect(openButton, SIGNAL(released()), this, SLOT(open()));
     connect(saveButton, SIGNAL(released()), this, SLOT(save()));
     connect(greyButton, SIGNAL(released()), this, SLOT(grey()));
+    connect(gradientButton, SIGNAL(released()), this, SLOT(gradient()));
+    connect(saliencyButton, SIGNAL(released()), this, SLOT(saliency()));
     connect(stepButton, SIGNAL(released()), this, SLOT(step()));
     connect(addPointButton, SIGNAL(released()), this, SLOT(addPoint()));
     connect(addAllPointsButton, SIGNAL(released()), this, SLOT(addAllPoints()));
@@ -36,6 +42,8 @@ Application::Application(QWidget* parent) :
     menu_layout->addWidget(openButton);
     menu_layout->addWidget(saveButton);
     menu_layout->addWidget(greyButton);
+    menu_layout->addWidget(gradientButton);
+    menu_layout->addWidget(saliencyButton);
     menu_layout->addWidget(stepButton);
     menu_layout->addWidget(addPointButton);
     menu_layout->addWidget(addAllPointsButton);
@@ -45,7 +53,6 @@ Application::Application(QWidget* parent) :
     main_layout->addWidget(opengl_area, 3);
 
     setLayout(main_layout);
-
 }
 
 void Application::open()
@@ -75,6 +82,16 @@ void Application::grey(){
     image_area->transformToGrey();
 }
 
+void Application::gradient(){
+    image_area->gradient_saliency();
+}
+
+void Application::saliency(){
+    dialog = new SaliencyForm();
+    dialog->linkTrianguledImage(image_area);
+    dialog->exec();
+}
+
 void Application::addPoint()
 {
     image_area->addRandomPoint();
@@ -100,3 +117,5 @@ bool Application::saveFile(const QByteArray &fileFormat)
         return image_area->saveImage(fileName, fileFormat.constData());
     }
 }
+
+
