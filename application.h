@@ -21,7 +21,6 @@ private slots:
     void open();
     void save();
     void grey();
-    void gradient();
     void saliency();
     void step();
     void addPoint();
@@ -36,7 +35,6 @@ private:
     QPushButton *openButton;
     QPushButton *saveButton;
     QPushButton *greyButton;
-    QPushButton *gradientButton;
     QPushButton *saliencyButton;
     QPushButton *stepButton;
     QPushButton *addPointButton;

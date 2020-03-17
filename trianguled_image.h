@@ -22,10 +22,13 @@ public:
     void triangulate();
     void addRandomPoint();
     void addPoints();
+
+    QImage getImage();
     std::vector<QPointF*> getPoints();
     std::vector<Triangle*> getTriangles();
     double getScaleX();
     double getScaleY();
+    void setN_xy(double);
     QColor getPointColor(int i);
     QColor getTriangleColor(int p1, int p2, int p3);
 protected:

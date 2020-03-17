@@ -161,10 +161,6 @@ void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value 
 
 QImage Trianguled_image::gradient_saliency(){
     if(!image.isNull()) {
-        if(!image.allGray()){
-            backupImage = image;
-            image = image.convertToFormat(QImage::Format_Grayscale8);
-        }
         QImage res = QImage(image);
         //G=sqrt(p(i,j)-p(i-1,j)2) +
         for(int i=0 ; i<image.width() ; i++){
@@ -191,16 +187,62 @@ QImage Trianguled_image::gradient_saliency(){
                 res.setPixel(i , j, value);
             }
         }
-        image = res;
-        update();
-        qInfo() << "Image transformed";
-    } else {
-        qInfo() << "No image to transform";
+        qInfo() << "Gradient saliency done";
+        return res;
     }
-    return image;
+    return QImage(image);
 }
 
 QImage Trianguled_image::color_saliency(){
+    if(!image.isNull()) {
+        QImage res = QImage(image.width(), image.height(), image.format());
+        for(int i=0 ; i<image.width() ; i++){
+            for(int j=0 ; j<image.height() ; j++){
+                double g1[3] = {0,0,0};
+                double g2[3] = {0,0,0};
+                double g3[3] = {0,0,0};
+                double g4[3] = {0,0,0};
+                if(i>0){
+                    g1[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i-1, j).red(),2);
+                    g1[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i-1, j).green(),2);
+                    g1[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i-1, j).blue(),2);
+                }
+                if(i<image.width()-1){
+                    g2[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i+1, j).red(),2);
+                    g2[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i+1, j).green(),2);
+                    g2[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i+1, j).blue(),2);
+                }
+                if(j>0){
+                    g3[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i, j-1).red(),2);
+                    g3[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i, j-1).green(),2);
+                    g3[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i, j-1).blue(),2);
+                }
+                if(j<image.height()-1){
+                    g4[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i, j+1).red(),2);
+                    g4[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i, j+1).green(),2);
+                    g4[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i, j+1).blue(),2);
+                }
+                double G[3];
+                G[0] = sqrt(g1[0] + g2[0] + g3[0] + g4[0]);
+                G[1] = sqrt(g1[1] + g2[1] + g3[1] + g4[1]);
+                G[2] = sqrt(g1[2] + g2[2] + g3[2] + g4[2]);
+
+                double Gres = 0;
+                for(int i=0 ; i<3 ; i++){
+                    if(G[i] > Gres){
+                        Gres = G[i];
+                    }
+                }
+
+
+                QRgb value = qRgb(static_cast<int>(Gres), static_cast<int>(Gres), static_cast<int>(Gres));
+                res.setPixel(i , j, value);
+            }
+        }
+
+        qInfo() << "Color saliency done";
+        return res;
+    }
     return QImage(image);
 }
 
@@ -346,6 +388,10 @@ void Trianguled_image::addRandomPoint()
 //    }
 }
 
+QImage Trianguled_image::getImage(){
+    return this->image;
+}
+
 std::vector<QPointF*> Trianguled_image::getPoints(){
     return this->points;
 }
@@ -360,6 +406,11 @@ double Trianguled_image::getScaleX() {
 
 double Trianguled_image::getScaleY() {
     return image.height() / static_cast<double>(n_y-1);
+}
+
+void Trianguled_image::setN_xy(double percent) {
+    n_x = static_cast<int>(round(1.0 / percent));
+    n_y = static_cast<int>(n_x * (image.height() / static_cast<double>(image.width())));
 }
 
 QColor Trianguled_image::getPointColor(int i) {

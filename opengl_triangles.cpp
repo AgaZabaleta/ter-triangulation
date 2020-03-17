@@ -84,8 +84,8 @@ int OpenGLTriangles::updateVertices(){
     std::vector<GLfloat> vertices;
 
     double scale_x, scale_y, adapt_x, adapt_y;
-    scale_x = t_image->getScaleX();
-    scale_y = t_image->getScaleY();
+    scale_x = t_image->getImage().width();
+    scale_y = t_image->getImage().height();
 
     if(scale_x > scale_y) {
         adapt_y = scale_y / scale_x;
