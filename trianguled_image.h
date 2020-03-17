@@ -46,9 +46,11 @@ private:
 
     int n_y;
     int n_x;
+    int vision_range;
+    void setVision_range();
     bool triangulate_step();
     QPoint getBestPoint(QPoint point);
-    int vision_range = 50;
+
     int getPointValue(QPoint point);
     QPoint getNextPoint(QPoint p_origin, QPoint p_best);
 };

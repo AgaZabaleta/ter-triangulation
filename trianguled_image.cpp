@@ -411,6 +411,11 @@ double Trianguled_image::getScaleY() {
 void Trianguled_image::setN_xy(double percent) {
     n_x = static_cast<int>(round(1.0 / percent));
     n_y = static_cast<int>(n_x * (image.height() / static_cast<double>(image.width())));
+    setVision_range();
+}
+
+void Trianguled_image::setVision_range(){
+    vision_range = static_cast<int>(0.8 * image.width() / static_cast<double>(n_x));
 }
 
 QColor Trianguled_image::getPointColor(int i) {
