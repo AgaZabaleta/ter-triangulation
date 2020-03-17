@@ -407,7 +407,7 @@ QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
             p = QPoint(x, y);
             if (in_triangle(p, a, b, c)) {
                 n_pixel++;
-                p_color = image.pixelColor(p);
+                p_color = backupImage.pixelColor(p);
                 red += p_color.redF();
                 blue += p_color.blueF();
                 green += p_color.greenF();
