@@ -2,7 +2,7 @@
 #include <QtWidgets>
 #include "trianguled_image.h"
 
-Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent): QWidget(parent), n_y(n_rows), n_x(n_columns), points(n_rows * n_columns), tab_triangles()
+Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent): QWidget(parent), n_y(n_rows), n_x(n_columns), points(n_rows * n_columns), tab_triangles(), neighbours()
 {
     setAttribute(Qt::WA_StaticContents);
 }
@@ -24,8 +24,11 @@ bool Trianguled_image::openImage(const QString &fileName)
     for(Triangle* curr_triangle : tab_triangles) {
         delete(curr_triangle);
     }
+
     points.clear();
     tab_triangles.clear();
+
+    neighbours.clear();
 
     update();
     return true;
@@ -256,8 +259,6 @@ QImage Trianguled_image::color_saliency(){
     return QImage(image);
 }
 
-
-
 QImage Trianguled_image::texture_saliency(bool recurrent){
     if(!image.isNull()) {
         QImage res = QImage(image.width(), image.height(), image.format());
@@ -332,7 +333,6 @@ void Trianguled_image::triangulate()
         point_moved = triangulate_step();
     } while(point_moved);
 
-    //qInfo() << "finish tri";
 }
 
 int Trianguled_image::getPointValue(QPoint point){
@@ -397,7 +397,11 @@ bool Trianguled_image::triangulate_step()
     QPoint best_point;
     QPoint next_point;
 
-    for(QPointF* real_point : points) {
+    for(int i=0 ; i<static_cast<int>(points.size()) ; i++){
+        points_step.push_back(new QPointF(*points[i]));
+    }
+
+    for(QPointF* real_point : points_step) {
         if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
             QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
             best_point = getBestPoint(curr_point);
@@ -416,6 +420,35 @@ bool Trianguled_image::triangulate_step()
     return false;
 }
 
+void Trianguled_image::addNeighbor(int i, int j){
+    bool exists = false;
+    for(int k=0 ; k<neighbours[i].size() ; k++){
+        if(neighbours[i][k] == j){
+            exists = true;
+            break;
+        }
+    }
+    if(!exists){
+        neighbours[i].push_back(j);
+    }
+
+}
+
+QPointF Trianguled_image::getBarycenter(int i){
+    double denom = 0.0;
+    double nume_x = 0;
+    double nume_y = 0;
+    for(int j=0 ; j<static_cast<int>(neighbours[i].size()) ; j++){
+        nume_x += points[neighbours[i][j]]->x();
+        nume_y += points[neighbours[i][j]]->y();
+        denom++;
+    }
+    double x = nume_x/denom;
+    double y = nume_y/denom;
+    return QPointF(x,y);
+}
+
+
 void Trianguled_image::addPoints(){
     if(!image.isNull()) {
         double scale_x = getScaleX();
@@ -426,22 +459,33 @@ void Trianguled_image::addPoints(){
                 double pos_x = (i*scale_x) / static_cast<double>(image.width());
                 double pos_y = (j*scale_y) / static_cast<double>(image.height());
 
-                //qInfo() << pos_x << " " << pos_y;
                 points.push_back(new QPointF(pos_x, pos_y));
+                neighbours.push_back(std::vector<int>());
             }
         }
         for(int i = 0; i<n_x-1; i++) {
             for(int j = 0; j<n_y-1; j++) {
                 tab_triangles.push_back(new Triangle(i*n_y+j, i*n_y+j+1, (i+1)*n_y+j));
+                addNeighbor(i*n_y+j, i*n_y+j+1);
+                addNeighbor(i*n_y+j, (i+1)*n_y+j);
+                addNeighbor(i*n_y+j+1, i*n_y+j);
+                addNeighbor(i*n_y+j+1, (i+1)*n_y+j);
+                addNeighbor((i+1)*n_y+j, i*n_y+j);
+                addNeighbor((i+1)*n_y+j, i*n_y+j+1);
             }
         }
 
         for(int i = 1; i<n_x; i++) {
             for(int j = 1; j<n_y; j++) {
                 tab_triangles.push_back(new Triangle(i*n_y+j, (i-1)*n_y+j, i*n_y+j-1));
+                addNeighbor(i*n_y+j, (i-1)*n_y+j);
+                addNeighbor(i*n_y+j, i*n_y+j-1);
+                addNeighbor((i-1)*n_y+j, i*n_y+j);
+                addNeighbor((i-1)*n_y+j, i*n_y+j-1);
+                addNeighbor(i*n_y+j-1, i*n_y+j);
+                addNeighbor(i*n_y+j-1, (i-1)*n_y+j);
             }
         }
-
         update();
     } else {
         qInfo() << "No image to add points";

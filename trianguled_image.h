@@ -39,7 +39,10 @@ private:
     QImage backupImage; // Pour passer de gris à couleur
     QImage triangles;
     std::vector<QPointF*> points;
+    std::vector<QPointF*> points_step;
+    std::vector<QPointF*> points_final;
     std::vector<Triangle*> tab_triangles;
+    std::vector<std::vector<int>> neighbours;
     bool point_moved;
     int max_size = 500;
     void resizeImage(QImage *image, const QSize &newSize);
@@ -47,6 +50,9 @@ private:
     int n_y;
     int n_x;
     int vision_range;
+    void addNeighbor(int i, int j);
+    QPointF getBarycenter(int i);
+
     void setVision_range();
     bool triangulate_step();
     QPoint getBestPoint(QPoint point);
