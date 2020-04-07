@@ -55,6 +55,7 @@ private:
 
     void setVision_range();
     bool triangulate_step();
+    void laplacian_smoothing(float weight);
     QPoint getBestPoint(QPoint point);
 
     int getPointValue(QPoint point);

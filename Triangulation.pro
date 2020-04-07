@@ -1,5 +1,5 @@
 QT       += core gui opengl
-LIBS += opengl32.lib
+win32:LIBS += libopengl32
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11

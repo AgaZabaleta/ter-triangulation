@@ -417,8 +417,34 @@ bool Trianguled_image::triangulate_step()
             }
         }
     }
+    laplacian_smoothing(0.5);
     update();
     return false;
+}
+
+void Trianguled_image::laplacian_smoothing(float weight) {
+    points_final = std::vector<QPointF*>(points_step.size(), nullptr);
+
+    for(int i = 0; i < static_cast<int>(points.size()); i++) {
+
+        QPointF* real_point = points[i];
+        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
+            QPointF ring_center = getBarycenter(i);
+            QPointF curr_point = *points_step[i];
+            QPointF distance = (ring_center - curr_point);
+            double new_x, new_y;
+            new_x = curr_point.x() + weight * distance.x();
+            new_y = curr_point.y() + weight * distance.y();
+            points_final[i] = new QPointF();
+            points_final[i]->setX(new_x);
+            points_final[i]->setY(new_y);
+
+            //check energy
+            //if new energy < old
+            real_point->setX(points_final[i]->x());
+            real_point->setY(points_final[i]->y());
+        }
+    }
 }
 
 void Trianguled_image::addNeighbor(int i, int j){
@@ -440,8 +466,8 @@ QPointF Trianguled_image::getBarycenter(int i){
     double nume_x = 0;
     double nume_y = 0;
     for(int j=0 ; j<static_cast<int>(neighbours[i].size()) ; j++){
-        nume_x += points[neighbours[i][j]]->x();
-        nume_y += points[neighbours[i][j]]->y();
+        nume_x += points_step[neighbours[i][j]]->x();
+        nume_y += points_step[neighbours[i][j]]->y();
         denom++;
     }
     double x = nume_x/denom;
