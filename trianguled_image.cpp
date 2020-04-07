@@ -397,6 +397,7 @@ bool Trianguled_image::triangulate_step()
     QPoint best_point;
     QPoint next_point;
 
+    points_step.clear();
     for(int i=0 ; i<static_cast<int>(points.size()) ; i++){
         points_step.push_back(new QPointF(*points[i]));
     }
