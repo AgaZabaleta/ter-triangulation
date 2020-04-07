@@ -123,15 +123,31 @@ void Trianguled_image::transformToGrey(){
     }
 }
 
-void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value = 0.0,double  texture_value = 0.0){
+void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value = 0.0,double  texture_value = 0.0, bool recurrent = false){
     if(!image.isNull()) {
         if(!image.allGray()){
             backupImage = image;
             image = image.convertToFormat(QImage::Format_Grayscale8);
         }
-        QImage gradient_image = gradient_saliency();
-        QImage color_image = color_saliency();
-        QImage texture_image = texture_saliency();
+
+        QImage gradient_image;
+        QImage color_image;
+        QImage texture_image;
+        if(gradient_value == 0.0){
+            gradient_image = QImage(image);
+        }else{
+            gradient_image = gradient_saliency();
+        }
+        if(color_value == 0.0){
+            color_image = QImage(image);
+        }else{
+            color_image = color_saliency();
+        }
+        if(texture_value == 0.0){
+            texture_image = QImage(image);
+        }else{
+            texture_image = texture_saliency(recurrent);
+        }
 
         double test_total = gradient_value + color_value + texture_value;
         if(test_total != 1.0){
@@ -227,13 +243,7 @@ QImage Trianguled_image::color_saliency(){
                 G[1] = sqrt(g1[1] + g2[1] + g3[1] + g4[1]);
                 G[2] = sqrt(g1[2] + g2[2] + g3[2] + g4[2]);
 
-                double Gres = 0;
-                for(int i=0 ; i<3 ; i++){
-                    if(G[i] > Gres){
-                        Gres = G[i];
-                    }
-                }
-
+                double Gres = sqrt(pow(G[0], 2) + pow(G[1], 2) + pow(G[2], 2));
 
                 QRgb value = qRgb(static_cast<int>(Gres), static_cast<int>(Gres), static_cast<int>(Gres));
                 res.setPixel(i , j, value);
@@ -246,7 +256,72 @@ QImage Trianguled_image::color_saliency(){
     return QImage(image);
 }
 
-QImage Trianguled_image::texture_saliency(){
+
+
+QImage Trianguled_image::texture_saliency(bool recurrent){
+    if(!image.isNull()) {
+        QImage res = QImage(image.width(), image.height(), image.format());
+
+        int histo[255];
+        for(int i=0 ; i<256 ; i++){
+            histo[i] = 0;
+        }
+        for(int i=0 ; i<image.width() ; i++){
+            for(int j=0 ; j<image.height() ; j++){
+                if(i==0 || i==image.width()-1 || j==0 || j==image.width()-1){
+                    res.setPixel(i,j,0);
+                }else{
+                    int expo = 1;
+                    int value = 0;
+                    for(int y_delta=-1 ; y_delta<=1 ; y_delta++){
+                        for(int x_delta=-1 ; x_delta<=1 ; x_delta++){
+                            if(x_delta != 0 || y_delta != 0){
+                                int diff = image.pixelColor(i+x_delta, j+y_delta).blue() - image.pixelColor(i, j).blue();
+                                if(diff>=0){
+                                    diff = 1;
+                                }else{
+                                    diff = 0;
+                                }
+                                value+=diff*expo;
+                                expo*=2;
+                            }
+                        }
+                    }
+                    if(recurrent){
+                        histo[value]++;
+                    }
+                    QRgb rgb_value = qRgb(value, value, value);
+                    res.setPixel(i,j,rgb_value);
+                }
+            }
+        }
+
+        int new_histo[255];
+
+        for(int i=0 ; i<256 ; i++){
+            new_histo[i] = static_cast<int>(histo[i]/static_cast<double>(image.width()*image.height()) * 255);
+        }
+        int max = 0;
+        for(int i=0 ; i<256 ; i++){
+            if(max < new_histo[i]){
+                max = new_histo[i];
+            }
+        }
+        if(recurrent){
+            for(int i=0 ; i<image.width() ; i++){
+                for(int j=0 ; j<image.height() ; j++){
+                    if(!(i==0 || i==image.width()-1 || j==0 || j==image.width()-1)){
+                        int new_value = static_cast<int>(new_histo[res.pixelColor(i,j).blue()] / static_cast<double>(max) * 255.0);
+                        QRgb new_value_rgb = qRgb(new_value, new_value, new_value);
+                        res.setPixel(i,j,new_value_rgb);
+                    }
+                }
+            }
+        }
+
+        qInfo() << "Texture saliency done";
+        return res;
+    }
     return QImage(image);
 }
 
@@ -415,7 +490,7 @@ void Trianguled_image::setN_xy(double percent) {
 }
 
 void Trianguled_image::setVision_range(){
-    vision_range = static_cast<int>(0.8 * image.width() / static_cast<double>(n_x));
+    vision_range = static_cast<int>(0.5 * image.width() / static_cast<double>(n_x));
 }
 
 QColor Trianguled_image::getPointColor(int i) {

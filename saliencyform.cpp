@@ -36,7 +36,7 @@ void SaliencyForm::on_buttonBox_accepted()
     if(a==0.0 && b==0.0 && c==0.0){
         qInfo("Incorrect values");
     }else{
-        t_image->saliency(a, b, c);
+        t_image->saliency(a, b, c, ui->recurrentPattern->isChecked());
     }
 }
 
