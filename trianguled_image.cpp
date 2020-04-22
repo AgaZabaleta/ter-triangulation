@@ -111,18 +111,17 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
     }
 }
 
-void Trianguled_image::transformToGrey(){
-    if(!image.isNull()) {
-        if(image.allGray()){
-            image = backupImage;
+void Trianguled_image::switchImage(){
+    if(!image.isNull() && !saliencyMap.isNull()) {
+        if(image == backupImage){
+            image = saliencyMap;
         }else{
-            backupImage = image;
-            image = image.convertToFormat(QImage::Format_Grayscale8);
+            image = backupImage;
         }
         update();
         qInfo() << "Image transformed";
     } else {
-        qInfo() << "No image to transform";
+        qInfo() << "No image to switch";
     }
 }
 
@@ -171,6 +170,7 @@ void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value 
             }
         }
         image = res;
+        saliencyMap = res;
         update();
         qInfo() << "Image transformed";
     } else {
@@ -215,41 +215,20 @@ QImage Trianguled_image::gradient_saliency(){
 QImage Trianguled_image::color_saliency(){
     if(!image.isNull()) {
         QImage res = QImage(image.width(), image.height(), image.format());
-        for(int i=0 ; i<image.width() ; i++){
-            for(int j=0 ; j<image.height() ; j++){
-                double g1[3] = {0,0,0};
-                double g2[3] = {0,0,0};
-                double g3[3] = {0,0,0};
-                double g4[3] = {0,0,0};
-                if(i>0){
-                    g1[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i-1, j).red(),2);
-                    g1[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i-1, j).green(),2);
-                    g1[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i-1, j).blue(),2);
+        for(int i=0 ; i<backupImage.width() ; i++){
+            for(int j=0 ; j<backupImage.height() ; j++){
+                qreal h, s, v;
+                backupImage.pixelColor(i, j).getHsvF(&h, &s, &v);
+                h*=255;
+                s*=255;
+                v*=255;
+                int value = static_cast<int>(sqrt(pow(h,2)+pow(s,2)+pow(v,2)));
+                if(value > 255){
+                    value = 255;
                 }
-                if(i<image.width()-1){
-                    g2[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i+1, j).red(),2);
-                    g2[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i+1, j).green(),2);
-                    g2[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i+1, j).blue(),2);
-                }
-                if(j>0){
-                    g3[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i, j-1).red(),2);
-                    g3[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i, j-1).green(),2);
-                    g3[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i, j-1).blue(),2);
-                }
-                if(j<image.height()-1){
-                    g4[0] = pow(backupImage.pixelColor(i, j).red() - backupImage.pixelColor(i, j+1).red(),2);
-                    g4[1] = pow(backupImage.pixelColor(i, j).green() - backupImage.pixelColor(i, j+1).green(),2);
-                    g4[2] = pow(backupImage.pixelColor(i, j).blue() - backupImage.pixelColor(i, j+1).blue(),2);
-                }
-                double G[3];
-                G[0] = sqrt(g1[0] + g2[0] + g3[0] + g4[0]);
-                G[1] = sqrt(g1[1] + g2[1] + g3[1] + g4[1]);
-                G[2] = sqrt(g1[2] + g2[2] + g3[2] + g4[2]);
 
-                double Gres = sqrt(pow(G[0], 2) + pow(G[1], 2) + pow(G[2], 2));
-
-                QRgb value = qRgb(static_cast<int>(Gres), static_cast<int>(Gres), static_cast<int>(Gres));
-                res.setPixel(i , j, value);
+                QRgb color = qRgb(static_cast<int>(value), static_cast<int>(value), static_cast<int>(value));
+                res.setPixel(i, j, color);
             }
         }
 
@@ -336,7 +315,7 @@ void Trianguled_image::triangulate()
 }
 
 int Trianguled_image::getPointValue(QPoint point){
-    return image.pixelColor(point).red();
+    return saliencyMap.pixelColor(point).red();
 }
 
 
@@ -351,9 +330,9 @@ QPoint Trianguled_image::getBestPoint(QPoint point){
     int point_tmp_value;
 
     for(int i=(-1)*vision_range+px ; i<vision_range+px ; i++){
-        if(i>=0 && i<image.width()){
+        if(i>=0 && i<saliencyMap.width()){
             for(int j=(-1)*vision_range+py ; j<vision_range+py ; j++){
-                if(j>=0 && j<image.height()){
+                if(j>=0 && j<saliencyMap.height()){
                     distToPoint = sqrt(pow(i-px, 2)+pow(j-py, 2));
                     if(distToPoint<=vision_range){
                         point_tmp = QPoint(i,j);
@@ -394,6 +373,10 @@ QPoint Trianguled_image::getNextPoint(QPoint p_origin, QPoint p_best){
 
 bool Trianguled_image::triangulate_step()
 {
+    if(saliencyMap.isNull()){
+        qInfo() << "No saliency map";
+        return false;
+    }
     QPoint best_point;
     QPoint next_point;
 
@@ -404,7 +387,7 @@ bool Trianguled_image::triangulate_step()
 
     for(QPointF* real_point : points_step) {
         if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
-            QPoint curr_point(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
+            QPoint curr_point(static_cast<int>(real_point->x()*(saliencyMap.width()-1)), static_cast<int>(real_point->y()*(saliencyMap.height()-1)));
             best_point = getBestPoint(curr_point);
 
             if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
@@ -412,8 +395,8 @@ bool Trianguled_image::triangulate_step()
                 curr_point.setX(next_point.x());
                 curr_point.setY(next_point.y());
 
-                real_point->setX(curr_point.x() / static_cast<double>(image.width()));
-                real_point->setY(curr_point.y() / static_cast<double>(image.height()));
+                real_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
+                real_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
             }
         }
     }
@@ -519,19 +502,35 @@ void Trianguled_image::addPoints(){
     }
 }
 
+void Trianguled_image::test(){
+    if(image.isNull()){
+        openImage(testImage);
+    }
+    setN_xy(percent_test);
+    saliency(gradient_value_test, color_value_test, texture_value_test, recurrent_value_test);
+    addPoints();
+}
 
-void Trianguled_image::addRandomPoint()
-{
-//    if(!image.isNull()) {
-//        qInfo() << "Added point";
-//        int x = QRandomGenerator::global()->bounded(0, image.width());
-//        int y = QRandomGenerator::global()->bounded(0, image.height());
-//        points.push_back(new QPoint(x, y));
+void Trianguled_image::testSettings(double p, double gv, double cv, double tv, bool rec){
+    percent_test = p;
+    gradient_value_test = gv;
+    color_value_test = cv;
+    texture_value_test = tv;
+    recurrent_value_test = rec;
+}
 
-//        update();
-//    } else {
-//        qInfo() << "No image to add point";
-//    }
+void Trianguled_image::reset(){
+    image = backupImage;
+    saliencyMap = QImage();
+    triangles = QImage();
+    points.clear();
+    points_step.clear();
+    points_final.clear();
+    tab_triangles.clear();
+    neighbours.clear();
+
+    setN_xy();
+    update();
 }
 
 QImage Trianguled_image::getImage(){

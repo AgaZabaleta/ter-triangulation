@@ -14,21 +14,23 @@ public:
     Trianguled_image(int n_columns, int n_rows, QWidget *parent = nullptr);
     bool openImage(const QString &fileName);
     bool saveImage(const QString &fileName, const char *fileFormat);
-    void transformToGrey();
+    void switchImage();
     void saliency(double gradient_value, double color_value, double texture_value, bool recurrent);
     QImage gradient_saliency();
     QImage color_saliency();
     QImage texture_saliency(bool recurrent);
     void triangulate();
-    void addRandomPoint();
     void addPoints();
+    void test();
+    void testSettings(double p, double gv, double cv, double tv, bool rec);
+    void reset();
 
     QImage getImage();
     std::vector<QPointF*> getPoints();
     std::vector<Triangle*> getTriangles();
     double getScaleX();
     double getScaleY();
-    void setN_xy(double);
+    void setN_xy(double percent=0.05);
     QColor getPointColor(int i);
     QColor getTriangleColor(int p1, int p2, int p3);
 protected:
@@ -36,6 +38,7 @@ protected:
 
 private:
     QImage image;
+    QImage saliencyMap;
     QImage backupImage; // Pour passer de gris à couleur
     QImage triangles;
     std::vector<QPointF*> points;
@@ -60,6 +63,16 @@ private:
 
     int getPointValue(QPoint point);
     QPoint getNextPoint(QPoint p_origin, QPoint p_best);
+
+    // Test settings //
+    QString testImage = "C:/Users/basti/OneDrive/Bureau/panneau_stop.jpg";
+    double percent_test = 0.05;
+    double gradient_value_test = 1.0;
+    double color_value_test = 0.0;
+    double texture_value_test = 0.0;
+    bool recurrent_value_test = false;
+    // Test settings //
+
 };
 
 #endif // TRIANGULED_IMAGE_H

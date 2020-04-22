@@ -7,6 +7,7 @@
 #include "trianguled_image.h"
 #include "ui_saliencyform.h"
 #include "saliencyform.h"
+#include "testform.h"
 
 class Trianguled_image;
 
@@ -20,11 +21,14 @@ public:
 private slots:
     void open();
     void save();
-    void grey();
+    void switchIm();
     void saliency();
     void step();
-    void addPoint();
+    void step10();
     void addAllPoints();
+    void test();
+    void testSettings();
+    void reset();
 
 private:
     bool saveFile(const QByteArray &fileFormat);
@@ -34,13 +38,17 @@ private:
 
     QPushButton *openButton;
     QPushButton *saveButton;
-    QPushButton *greyButton;
+    QPushButton *switchButton;
     QPushButton *saliencyButton;
     QPushButton *stepButton;
-    QPushButton *addPointButton;
+    QPushButton *step10Button;
     QPushButton *addAllPointsButton;
+    QPushButton *testButton;
+    QPushButton *testSettingsButton;
+    QPushButton *resetButton;
 
     SaliencyForm *dialog;
+    testForm *test_form;
 
     Trianguled_image *image_area;
     OpenGLTriangles *opengl_area;

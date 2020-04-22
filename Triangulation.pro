@@ -1,5 +1,5 @@
 QT       += core gui opengl
-win32:LIBS += libopengl32
+LIBS += opengl32.lib
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
@@ -21,6 +21,7 @@ SOURCES += \
     mainwindow.cpp \
     opengl_triangles.cpp \
     saliencyform.cpp \
+    testform.cpp \
     triangle.cpp \
     trianguled_image.cpp
 
@@ -29,12 +30,14 @@ HEADERS += \
     mainwindow.h \
     opengl_triangles.h \
     saliencyform.h \
+    testform.h \
     triangle.h \
     trianguled_image.h
 
 FORMS += \
     mainwindow.ui \
-    saliencyform.ui
+    saliencyform.ui \
+    testform.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
