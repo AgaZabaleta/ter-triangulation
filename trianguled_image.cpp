@@ -160,21 +160,21 @@ void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value 
         }
 
         QImage res = QImage(image);
+        image = image.convertToFormat(QImage::Format_RGBA64);
         for(int i=0 ; i<res.width() ; i++){
             for(int j=0 ; j<res.height() ; j++){
                 double d_value = gradient_image.pixelColor(i,j).blue() * gradient_value
                         + color_image.pixelColor(i,j).blue() * color_value
                         + texture_image.pixelColor(i,j).blue() * texture_value;
 
-//                QRgb rgb_value = qRgb(static_cast<int>(d_value), static_cast<int>(d_value), static_cast<int>(d_value));
+                QRgb rgb_value = qRgb(static_cast<int>(d_value), static_cast<int>(d_value), static_cast<int>(d_value));
+                res.setPixelColor(i, j, rgb_value);
 
                 QColor color_value = QColor();
-                res = res.convertToFormat(QImage::Format_RGBA64);
                 color_value.setHsvF(0.98 * (d_value/255), 0.8,0.8);
-                res.setPixelColor(i, j, color_value);
+                image.setPixelColor(i, j, color_value);
             }
         }
-        image = res;
         saliencyMap = res;
         update();
         qInfo() << "Image transformed";
