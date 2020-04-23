@@ -22,7 +22,7 @@ public:
     void triangulate();
     void addPoints();
     void test();
-    void testSettings(double p, double gv, double cv, double tv, bool rec);
+    void testSettings(double p, double gv, double cv, double tv, bool rec, double lp);
     void reset();
 
     QImage getImage();
@@ -33,6 +33,8 @@ public:
     void setN_xy(double percent=0.05);
     QColor getPointColor(int i);
     QColor getTriangleColor(int p1, int p2, int p3);
+    double getTriangleError(int p1, int p2, int p3);
+    double getPointError(int curr_point);
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -46,6 +48,7 @@ private:
     std::vector<QPointF*> points_final;
     std::vector<Triangle*> tab_triangles;
     std::vector<std::vector<int>> neighbours;
+    std::vector<std::vector<int>> adjacent_triangles;
     bool point_moved;
     int max_size = 500;
     void resizeImage(QImage *image, const QSize &newSize);
@@ -54,11 +57,13 @@ private:
     int n_x;
     int vision_range;
     void addNeighbor(int i, int j);
+    void addAdjacentTriangle(int i, int triangle);
     QPointF getBarycenter(int i);
 
     void setVision_range();
     bool triangulate_step();
     void laplacian_smoothing(float weight);
+    double laplacian_dotproduct(int i);
     QPoint getBestPoint(QPoint point);
 
     int getPointValue(QPoint point);
@@ -70,6 +75,7 @@ private:
     double gradient_value_test = 1.0;
     double color_value_test = 0.0;
     double texture_value_test = 0.0;
+    double laplacian_value_test = 0.01;
     bool recurrent_value_test = false;
     // Test settings //
 

@@ -2,7 +2,7 @@
 #include <QtWidgets>
 #include "trianguled_image.h"
 
-Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent): QWidget(parent), n_y(n_rows), n_x(n_columns), points(n_rows * n_columns), tab_triangles(), neighbours()
+Trianguled_image::Trianguled_image(int n_rows, int n_columns, QWidget *parent): QWidget(parent), n_y(n_rows), n_x(n_columns), points(n_rows * n_columns), tab_triangles(), neighbours(), adjacent_triangles()
 {
     setAttribute(Qt::WA_StaticContents);
 }
@@ -29,6 +29,7 @@ bool Trianguled_image::openImage(const QString &fileName)
     tab_triangles.clear();
 
     neighbours.clear();
+    adjacent_triangles.clear();
 
     update();
     return true;
@@ -400,7 +401,7 @@ bool Trianguled_image::triangulate_step()
             }
         }
     }
-    laplacian_smoothing(0.5);
+    laplacian_smoothing(laplacian_value_test);
     update();
     return false;
 }
@@ -444,6 +445,20 @@ void Trianguled_image::addNeighbor(int i, int j){
 
 }
 
+void Trianguled_image::addAdjacentTriangle(int i, int triangle){
+    bool exists = false;
+    for(int k=0 ; k<adjacent_triangles[i].size() ; k++){
+        if(adjacent_triangles[i][k] == triangle){
+            exists = true;
+            break;
+        }
+    }
+    if(!exists){
+        adjacent_triangles[i].push_back(triangle);
+    }
+
+}
+
 QPointF Trianguled_image::getBarycenter(int i){
     double denom = 0.0;
     double nume_x = 0;
@@ -471,6 +486,7 @@ void Trianguled_image::addPoints(){
 
                 points.push_back(new QPointF(pos_x, pos_y));
                 neighbours.push_back(std::vector<int>());
+                adjacent_triangles.push_back(std::vector<int>());
             }
         }
         for(int i = 0; i<n_x-1; i++) {
@@ -482,6 +498,11 @@ void Trianguled_image::addPoints(){
                 addNeighbor(i*n_y+j+1, (i+1)*n_y+j);
                 addNeighbor((i+1)*n_y+j, i*n_y+j);
                 addNeighbor((i+1)*n_y+j, i*n_y+j+1);
+
+                int triangle_id = adjacent_triangles.size() - 1;
+                addAdjacentTriangle(i*n_y+j, triangle_id);
+                addAdjacentTriangle(i*n_y+j+1, triangle_id);
+                addAdjacentTriangle((i+1)*n_y+j, triangle_id);
             }
         }
 
@@ -494,6 +515,11 @@ void Trianguled_image::addPoints(){
                 addNeighbor((i-1)*n_y+j, i*n_y+j-1);
                 addNeighbor(i*n_y+j-1, i*n_y+j);
                 addNeighbor(i*n_y+j-1, (i-1)*n_y+j);
+
+                int triangle_id = adjacent_triangles.size() - 1;
+                addAdjacentTriangle(i*n_y+j, triangle_id);
+                addAdjacentTriangle((i-1)*n_y+j, triangle_id);
+                addAdjacentTriangle((i*n_y+j-1), triangle_id);
             }
         }
         update();
@@ -511,12 +537,13 @@ void Trianguled_image::test(){
     addPoints();
 }
 
-void Trianguled_image::testSettings(double p, double gv, double cv, double tv, bool rec){
+void Trianguled_image::testSettings(double p, double gv, double cv, double tv, bool rec, double lp){
     percent_test = p;
     gradient_value_test = gv;
     color_value_test = cv;
     texture_value_test = tv;
     recurrent_value_test = rec;
+    laplacian_value_test = lp;
 }
 
 void Trianguled_image::reset(){
@@ -528,6 +555,7 @@ void Trianguled_image::reset(){
     points_final.clear();
     tab_triangles.clear();
     neighbours.clear();
+    adjacent_triangles.clear();
 
     setN_xy();
     update();
@@ -624,4 +652,93 @@ QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
 
     return result;
 }
+
+double Trianguled_image::getTriangleError(int p1, int p2, int p3) {
+    QColor result(0,0,0);
+    double error;
+
+    QPoint a(static_cast<int>((points[p1])->x()*(image.width()-1)), static_cast<int>((points[p1])->y()*(image.height()-1)));
+    QPoint b(static_cast<int>((points[p2])->x()*(image.width()-1)), static_cast<int>((points[p2])->y()*(image.height()-1)));
+    QPoint c(static_cast<int>((points[p3])->x()*(image.width()-1)), static_cast<int>((points[p3])->y()*(image.height()-1)));
+
+    QPoint p;
+    QColor p_color;
+    double red = 0;
+    double green = 0;
+    double blue = 0;
+    int n_pixel = 0;
+
+    int min_x = std::min(a.x(), std::min(b.x(), c.x()));
+    int min_y = std::min(a.y(), std::min(b.y(), c.y()));
+    int max_x = std::max(a.x(), std::max(b.x(), c.x()));
+    int max_y = std::max(a.y(), std::max(b.y(), c.y()));
+
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
+            p = QPoint(x, y);
+            if (in_triangle(p, a, b, c)) {
+                n_pixel++;
+                p_color = backupImage.pixelColor(p);
+                red += p_color.redF();
+                blue += p_color.blueF();
+                green += p_color.greenF();
+            }
+        }
+    }
+
+    if(n_pixel > 0) {
+        result.setRedF(red / n_pixel);
+        result.setBlueF(blue / n_pixel);
+        result.setGreenF(green / n_pixel);
+    }
+
+    double sum_dist = 0;
+    double true_color_value;
+    double mean_color_value = (result.redF() + result.blueF() + result.greenF()) / 3;
+
+    for(int x = min_x; x <= max_x; x++) {
+        for(int y = min_y; y <= max_y; y++) {
+            p = QPoint(x, y);
+            if (in_triangle(p, a, b, c)) {
+                p_color = backupImage.pixelColor(p);
+                true_color_value = (p_color.redF() + p_color.blueF() + p_color.greenF()) / 3;
+                sum_dist += (true_color_value - mean_color_value) * (true_color_value - mean_color_value);
+            }
+        }
+    }
+
+    error = sum_dist / (2 * n_pixel);
+
+    return error;
+}
+
+double Trianguled_image::laplacian_dotproduct(int i){
+    double sum = 0;
+    QPointF* curr_point = points[i];
+    int n_neighbours = static_cast<int>(neighbours[i].size());
+    for(int j=0 ; j < n_neighbours ; j++){
+        QPointF* curr_neighbour = points[neighbours[i][j]];
+
+        QPointF distance = *curr_neighbour - *curr_point;
+        sum += QPointF::dotProduct(distance, distance);
+    }
+
+    return (sum / 2 * n_neighbours);
+}
+
+double Trianguled_image::getPointError(int curr_point) {
+    Triangle* curr_t;
+    double curr_err;
+    double sum_error = 0;
+    for (int adj_triangle_id : adjacent_triangles[curr_point]) {
+        curr_t = tab_triangles[adj_triangle_id];
+        curr_err = getTriangleError(curr_t->getP1(), curr_t->getP2(), curr_t->getP3()) / 3;
+        curr_err += laplacian_value_test * laplacian_dotproduct(curr_point);
+        sum_error += curr_err;
+    }
+
+    return sum_error;
+}
+
+
 
