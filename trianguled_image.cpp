@@ -86,7 +86,7 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
                         static_cast<int>(real_point->x()*scaledImage.width()),
                         static_cast<int>(real_point->y()*scaledImage.height())
                         );
-            painter.setPen(QPen(QColor(255,0,0), 10, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
+            painter.setPen(QPen(QColor(0,0,0), 5, Qt::SolidLine,  Qt::RoundCap, Qt::RoundJoin));
             painter.drawPoint(curr_point);
             painter.drawImage(QPoint(0,0), triangles);
         }
@@ -166,8 +166,12 @@ void Trianguled_image::saliency(double gradient_value = 0.0,double  color_value 
                         + color_image.pixelColor(i,j).blue() * color_value
                         + texture_image.pixelColor(i,j).blue() * texture_value;
 
-                QRgb rgb_value = qRgb(static_cast<int>(d_value), static_cast<int>(d_value), static_cast<int>(d_value));
-                res.setPixel(i, j, rgb_value);
+//                QRgb rgb_value = qRgb(static_cast<int>(d_value), static_cast<int>(d_value), static_cast<int>(d_value));
+
+                QColor color_value = QColor();
+                res = res.convertToFormat(QImage::Format_RGBA64);
+                color_value.setHsvF(0.98 * (d_value/255), 0.8,0.8);
+                res.setPixelColor(i, j, color_value);
             }
         }
         image = res;
