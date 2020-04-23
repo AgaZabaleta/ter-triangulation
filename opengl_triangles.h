@@ -11,6 +11,7 @@ class OpenGLTriangles : public QOpenGLWidget, protected QOpenGLFunctions
 public:
     OpenGLTriangles(QWidget *parent = nullptr);
     void linkTrianguledImage(Trianguled_image*);
+    void toggle_display();
 //    ~OpenGLTriangles();
 
 protected:
@@ -32,6 +33,8 @@ private:
     GLfloat QPointToPositionX(QPointF point);
     GLfloat QPointToPositionY(QPointF point);
     int updateVertices();
+
+    boolean display_errors = false;
 };
 
 #endif // OPENGL_TRIANGLES_H

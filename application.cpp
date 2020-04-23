@@ -22,6 +22,7 @@ Application::Application(QWidget* parent) :
     testButton = new QPushButton("Test", this);
     testSettingsButton = new QPushButton("Test settings", this);
     resetButton = new QPushButton("Reset", this);
+    toggleOpenglButton = new QPushButton("Toggle Opengl display", this);
 
     openButton->setGeometry(QRect(QPoint(100,100), QSize(200,50)));
     saveButton->setGeometry(QRect(QPoint(100,175), QSize(200,50)));
@@ -33,6 +34,7 @@ Application::Application(QWidget* parent) :
     testButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
     testSettingsButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
     resetButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
+    toggleOpenglButton->setGeometry(QRect(QPoint(100,325), QSize(200,50)));
 
     connect(openButton, SIGNAL(released()), this, SLOT(open()));
     connect(saveButton, SIGNAL(released()), this, SLOT(save()));
@@ -44,6 +46,7 @@ Application::Application(QWidget* parent) :
     connect(testButton, SIGNAL(released()), this, SLOT(test()));
     connect(testSettingsButton, SIGNAL(released()), this, SLOT(testSettings()));
     connect(resetButton, SIGNAL(released()), this, SLOT(reset()));
+    connect(toggleOpenglButton, SIGNAL(released()), this, SLOT(toggleOpengl()));
 
     menu_layout->addWidget(openButton);
     menu_layout->addWidget(saveButton);
@@ -55,6 +58,7 @@ Application::Application(QWidget* parent) :
     menu_layout->addWidget(testButton);
     menu_layout->addWidget(testSettingsButton);
     menu_layout->addWidget(resetButton);
+    menu_layout->addWidget(toggleOpenglButton);
 
     main_layout->addLayout(menu_layout, 1);
     main_layout->addWidget(image_area, 3);
@@ -123,6 +127,11 @@ void Application::testSettings(){
 
 void Application::reset(){
     image_area->reset();
+    opengl_area->update();
+}
+
+void Application::toggleOpengl() {
+    opengl_area->toggle_display();
     opengl_area->update();
 }
 

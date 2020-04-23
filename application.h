@@ -29,6 +29,7 @@ private slots:
     void test();
     void testSettings();
     void reset();
+    void toggleOpengl();
 
 private:
     bool saveFile(const QByteArray &fileFormat);
@@ -46,6 +47,7 @@ private:
     QPushButton *testButton;
     QPushButton *testSettingsButton;
     QPushButton *resetButton;
+    QPushButton *toggleOpenglButton;
 
     SaliencyForm *dialog;
     testForm *test_form;

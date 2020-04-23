@@ -96,8 +96,8 @@ int OpenGLTriangles::updateVertices(){
     }
 
     std::vector<QPointF*> t_points = t_image->getPoints();
-    QColor v_color;
-
+    QColor v_color = QColor();
+    qInfo() << "\ndessin opengl";
     for(Triangle* t : t_image->getTriangles()){
 
 //        double r = 0;
@@ -120,7 +120,13 @@ int OpenGLTriangles::updateVertices(){
 //        v_color.setRedF(r / 3.0);
 //        v_color.setGreenF(g / 3.0);
 //        v_color.setBlueF(b / 3.0);
-        v_color = t_image->getTriangleColor(t->getP1(), t->getP2(), t->getP3());
+        if(display_errors) {
+            double t_error = t_image->getTriangleError(t->getP1(), t->getP2(), t->getP3());
+            qInfo() << t_error;
+            v_color.setHsvF(0.98 * t_error, 0.8, 0.8);
+        } else {
+            v_color = t_image->getTriangleColor(t->getP1(), t->getP2(), t->getP3());
+        }
 
         vertices.push_back(QPointToPositionX(*(t_points[t->getP1()])) * adapt_x);
         vertices.push_back(QPointToPositionY(*(t_points[t->getP1()])) * adapt_y);
@@ -203,4 +209,8 @@ GLfloat OpenGLTriangles::QPointToPositionX(QPointF point){
 
 GLfloat OpenGLTriangles::QPointToPositionY(QPointF point){
     return -1.0f * (static_cast<GLfloat>(point.y()) * 2.0f - 1.0f);
+}
+
+void OpenGLTriangles::toggle_display() {
+    display_errors = !display_errors;
 }
