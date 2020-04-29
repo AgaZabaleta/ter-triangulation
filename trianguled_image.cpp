@@ -390,24 +390,84 @@ bool Trianguled_image::triangulate_step()
         points_step.push_back(new QPointF(*points[i]));
     }
 
-    for(QPointF* real_point : points_step) {
-        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
-            QPoint curr_point(static_cast<int>(real_point->x()*(saliencyMap.width()-1)), static_cast<int>(real_point->y()*(saliencyMap.height()-1)));
-            best_point = getBestPoint(curr_point);
+//    for(QPointF* real_point : points_step) {
+//        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
+//            QPoint curr_point(static_cast<int>(real_point->x()*(saliencyMap.width()-1)), static_cast<int>(real_point->y()*(saliencyMap.height()-1)));
+//            best_point = getBestPoint(curr_point);
 
-            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
-                next_point = getNextPoint(curr_point, best_point);
-                curr_point.setX(next_point.x());
-                curr_point.setY(next_point.y());
+//            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
+//                next_point = getNextPoint(curr_point, best_point);
+//                curr_point.setX(next_point.x());
+//                curr_point.setY(next_point.y());
 
-                real_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
-                real_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
-            }
-        }
-    }
-    laplacian_smoothing(laplacian_value_test);
+//                real_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
+//                real_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
+//            }
+//        }
+//    }
+    point_error_step();
     update();
     return false;
+}
+
+void Trianguled_image::point_error_step(){
+    for(int i = 0; i < static_cast<int>(points_step.size()); i++) {
+        QPointF* real_point = points_step[i];
+        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) { // On prends pas les points au bord
+            // On initialise min_error à l'erreur d'origine
+            // et min_point au point de base
+            double min_error = getPointError(i, true);
+            QPointF* min_point = new QPointF(*real_point);
+            for(int k=0 ; k<4 ; k++){ // k=1 : on regarde que le point a droite ; k=4 : on regarde haut bas gauche droite ; k=8 on regarde les diag. en plus
+                for(int j=1 ; j<=cardinal_range ; j++){ // La nombre de point qu'on va regarder dans une direction (cardinal_range se trouve dans le .h)
+                    // transformation en qpoint pour decaler les px
+                    QPoint transi(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
+                    // On decale dans les sens souhaités
+                    if(k==0){
+                        transi.setX(transi.x()+j);
+                    }else if(k==1){
+                        transi.setY(transi.y()+j);
+                    }else if(k==2){
+                        transi.setX(transi.x()-j);
+                    }else if(k==3){
+                        transi.setY(transi.y()-j);
+                    }else if(k==4){
+                        transi.setX(transi.x()+j);
+                        transi.setY(transi.y()+j);
+                    }else if(k==5){
+                        transi.setX(transi.x()-j);
+                        transi.setY(transi.y()-j);
+                    }else if(k==6){
+                        transi.setX(transi.x()+j);
+                        transi.setY(transi.y()-j);
+                    }else if(k==7){
+                        transi.setX(transi.x()-j);
+                        transi.setY(transi.y()+j);
+                    }
+                    // On repasse le qpoint en qpointF
+                    QPointF* test_error = new QPointF(transi.x()/static_cast<double>(image.width()-1), transi.y()/static_cast<double>(image.height()-1));
+                    // On le met dans le tableau points_step
+                    points_step[i] = test_error;
+                    // On calcule l'erreur du nouveau point
+                    double test_error_value = getPointError(i, true);
+                    // Si l'erreur est minimisée par ce point
+                    if(test_error_value < min_error){
+                        // On remplace min_error / min_point
+                        min_error = test_error_value;
+                        min_point = test_error;
+                    }
+                    // On remet le point d'origine pour refaire les tests
+                    points_step[i] = real_point;
+                }
+            }
+
+            // On change par le point qui minimise l'erreur
+            points_step[i] = min_point;
+
+        }
+    }
+    // On appelle la suite du programme
+    laplacian_smoothing(laplacian_value_test);
 }
 
 void Trianguled_image::laplacian_smoothing(float weight) {
@@ -657,13 +717,26 @@ QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
     return result;
 }
 
-double Trianguled_image::getTriangleError(int p1, int p2, int p3) {
+double Trianguled_image::getTriangleError(int p1, int p2, int p3, bool use_point_step) {
     QColor result(0,0,0);
     double error;
 
-    QPoint a(static_cast<int>((points[p1])->x()*(image.width()-1)), static_cast<int>((points[p1])->y()*(image.height()-1)));
-    QPoint b(static_cast<int>((points[p2])->x()*(image.width()-1)), static_cast<int>((points[p2])->y()*(image.height()-1)));
-    QPoint c(static_cast<int>((points[p3])->x()*(image.width()-1)), static_cast<int>((points[p3])->y()*(image.height()-1)));
+    QPoint a, b, c;
+    if(!use_point_step){
+        a.setX(static_cast<int>((points[p1])->x()*(image.width()-1)));
+        a.setY(static_cast<int>((points[p1])->y()*(image.height()-1)));
+        b.setX(static_cast<int>((points[p2])->x()*(image.width()-1)));
+        b.setY(static_cast<int>((points[p2])->y()*(image.height()-1)));
+        c.setX(static_cast<int>((points[p3])->x()*(image.width()-1)));
+        c.setY(static_cast<int>((points[p3])->y()*(image.height()-1)));
+    }else{
+        a.setX(static_cast<int>((points_step[p1])->x()*(image.width()-1)));
+        a.setY(static_cast<int>((points_step[p1])->y()*(image.height()-1)));
+        b.setX(static_cast<int>((points_step[p2])->x()*(image.width()-1)));
+        b.setY(static_cast<int>((points_step[p2])->y()*(image.height()-1)));
+        c.setX(static_cast<int>((points_step[p3])->x()*(image.width()-1)));
+        c.setY(static_cast<int>((points_step[p3])->y()*(image.height()-1)));
+    }
 
     QPoint p;
     QColor p_color;
@@ -730,13 +803,13 @@ double Trianguled_image::laplacian_dotproduct(int i){
     return (sum / 2 * n_neighbours);
 }
 
-double Trianguled_image::getPointError(int curr_point) {
+double Trianguled_image::getPointError(int curr_point, bool use_point_step) {
     Triangle* curr_t;
     double curr_err;
     double sum_error = 0;
     for (int adj_triangle_id : adjacent_triangles[curr_point]) {
         curr_t = tab_triangles[adj_triangle_id];
-        curr_err = getTriangleError(curr_t->getP1(), curr_t->getP2(), curr_t->getP3()) / 3;
+        curr_err = getTriangleError(curr_t->getP1(), curr_t->getP2(), curr_t->getP3(), use_point_step) / 3;
         curr_err += laplacian_value_test * laplacian_dotproduct(curr_point);
         sum_error += curr_err;
     }

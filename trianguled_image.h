@@ -33,8 +33,8 @@ public:
     void setN_xy(double percent=0.05);
     QColor getPointColor(int i);
     QColor getTriangleColor(int p1, int p2, int p3);
-    double getTriangleError(int p1, int p2, int p3);
-    double getPointError(int curr_point);
+    double getTriangleError(int p1, int p2, int p3, bool use_point_step);
+    double getPointError(int curr_point, bool use_point_step);
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -56,12 +56,14 @@ private:
     int n_y;
     int n_x;
     int vision_range;
+    int cardinal_range = 20; // deplacement triangle error
     void addNeighbor(int i, int j);
     void addAdjacentTriangle(int i, int triangle);
     QPointF getBarycenter(int i);
 
     void setVision_range();
     bool triangulate_step();
+    void point_error_step();
     void laplacian_smoothing(float weight);
     double laplacian_dotproduct(int i);
     QPoint getBestPoint(QPoint point);
@@ -75,7 +77,7 @@ private:
     double gradient_value_test = 1.0;
     double color_value_test = 0.0;
     double texture_value_test = 0.0;
-    double laplacian_value_test = 0.01;
+    double laplacian_value_test = 0.0;
     bool recurrent_value_test = false;
     // Test settings //
 

@@ -121,7 +121,7 @@ int OpenGLTriangles::updateVertices(){
 //        v_color.setGreenF(g / 3.0);
 //        v_color.setBlueF(b / 3.0);
         if(display_errors) {
-            double t_error = t_image->getTriangleError(t->getP1(), t->getP2(), t->getP3());
+            double t_error = t_image->getTriangleError(t->getP1(), t->getP2(), t->getP3(), false);
             qInfo() << t_error;
             v_color.setHsvF(0.98 * t_error, 0.8, 0.8);
         } else {
