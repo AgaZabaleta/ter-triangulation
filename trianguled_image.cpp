@@ -382,46 +382,74 @@ bool Trianguled_image::triangulate_step()
         qInfo() << "No saliency map";
         return false;
     }
-    QPoint best_point;
-    QPoint next_point;
 
-    points_step.clear();
-    for(int i=0 ; i<static_cast<int>(points.size()) ; i++){
-        points_step.push_back(new QPointF(*points[i]));
+    points_buffer.clear();
+    for(int i = 0; i < static_cast<int>(points.size()); i++) {
+//        qInfo() << getPointError(i, points);
+        points_buffer.push_back(new QPointF(*points[i]));
     }
 
-//    for(QPointF* real_point : points_step) {
-//        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
-//            QPoint curr_point(static_cast<int>(real_point->x()*(saliencyMap.width()-1)), static_cast<int>(real_point->y()*(saliencyMap.height()-1)));
-//            best_point = getBestPoint(curr_point);
+    step_saliency(points_buffer, points_buffer);
+    step_error(points_buffer, points_buffer);
+    step_laplacian(points_buffer, points, laplacian_value_test);
 
-//            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
-//                next_point = getNextPoint(curr_point, best_point);
-//                curr_point.setX(next_point.x());
-//                curr_point.setY(next_point.y());
-
-//                real_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
-//                real_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
-//            }
-//        }
-//    }
-    point_error_step();
     update();
     return false;
 }
 
-void Trianguled_image::point_error_step(){
-    for(int i = 0; i < static_cast<int>(points_step.size()); i++) {
-        QPointF* real_point = points_step[i];
+void Trianguled_image::step_saliency(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points)
+{
+//    dest_points.clear();
+//    for(int i=0 ; i<static_cast<int>(points.size()) ; i++){
+//        points_step.push_back(new QPointF(*points[i]));
+//    }
+
+    QPoint best_point;
+    QPoint next_point;
+
+    for(int i = 0; i < static_cast<int>(source_points.size()); i++) {
+        QPointF* real_point = source_points[i];
+
+        if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
+            QPoint curr_point(static_cast<int>(real_point->x()*(saliencyMap.width()-1)), static_cast<int>(real_point->y()*(saliencyMap.height()-1)));
+            best_point = getBestPoint(curr_point);
+
+            if(curr_point.x() != best_point.x() || curr_point.y() != best_point.y()){
+                next_point = getNextPoint(curr_point, best_point);
+                curr_point.setX(next_point.x());
+                curr_point.setY(next_point.y());
+
+//                real_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
+//                real_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
+
+//                QPointF* new_point = new QPointF();
+//                new_point->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
+//                new_point->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
+
+//                dest_points.push_back(new_point);
+
+                dest_points[i]->setX(curr_point.x() / static_cast<double>(saliencyMap.width()));
+                dest_points[i]->setY(curr_point.y() / static_cast<double>(saliencyMap.height()));
+
+            }
+        }
+    }
+}
+
+void Trianguled_image::step_error(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points)
+{
+    for(int i = 0; i < static_cast<int>(source_points.size()); i++) {
+        QPointF* real_point = source_points[i];
         if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) { // On prends pas les points au bord
             // On initialise min_error à l'erreur d'origine
             // et min_point au point de base
-            double min_error = getPointError(i, true);
+            double min_error = getPointError(i, source_points);
             QPointF* min_point = new QPointF(*real_point);
             for(int k=0 ; k<4 ; k++){ // k=1 : on regarde que le point a droite ; k=4 : on regarde haut bas gauche droite ; k=8 on regarde les diag. en plus
                 for(int j=1 ; j<=cardinal_range ; j++){ // La nombre de point qu'on va regarder dans une direction (cardinal_range se trouve dans le .h)
                     // transformation en qpoint pour decaler les px
                     QPoint transi(static_cast<int>(real_point->x()*(image.width()-1)), static_cast<int>(real_point->y()*(image.height()-1)));
+                    QPoint old = QPoint(transi);
                     // On decale dans les sens souhaités
                     if(k==0){
                         transi.setX(transi.x()+j);
@@ -445,52 +473,50 @@ void Trianguled_image::point_error_step(){
                         transi.setY(transi.y()+j);
                     }
                     // On repasse le qpoint en qpointF
-                    QPointF* test_error = new QPointF(transi.x()/static_cast<double>(image.width()-1), transi.y()/static_cast<double>(image.height()-1));
-                    // On le met dans le tableau points_step
-                    points_step[i] = test_error;
-                    // On calcule l'erreur du nouveau point
-                    double test_error_value = getPointError(i, true);
-                    // Si l'erreur est minimisée par ce point
-                    if(test_error_value < min_error){
-                        // On remplace min_error / min_point
-                        min_error = test_error_value;
-                        min_point = test_error;
+                    QPointF* test_error = new QPointF(transi.x()/static_cast<double>(image.width()), transi.y()/static_cast<double>(image.height()));
+                    if((test_error->x() > 0 && test_error->x() < 1) && (test_error->y() > 0 && test_error->y() < 1)) {
+                        // On le met dans le tableau points_step
+                        source_points[i] = test_error;
+                        // On calcule l'erreur du nouveau point
+                        double test_error_value = getPointError(i, source_points);
+                        // Si l'erreur est minimisée par ce point
+    //                    if(i == source_points.size() / 2 + 13 && k == 1) {
+    //                        qInfo() << "previous error: " << min_error << "; curr_error: " << test_error_value;
+    //                        qInfo() << "for: " << *real_point << " " << *min_point << " " << *test_error << " and " << *source_points[i];
+    //                    }
+
+                        if(test_error_value < min_error){
+    //                        qInfo() << "less! at " << i;
+                            // On remplace min_error / min_point
+                            min_error = test_error_value;
+                            min_point = test_error;
+                        }
+                        // On remet le point d'origine pour refaire les tests
+                        source_points[i] = real_point;
                     }
-                    // On remet le point d'origine pour refaire les tests
-                    points_step[i] = real_point;
                 }
             }
 
             // On change par le point qui minimise l'erreur
-            points_step[i] = min_point;
-
+            dest_points[i] = min_point;
         }
     }
-    // On appelle la suite du programme
-    laplacian_smoothing(laplacian_value_test);
 }
 
-void Trianguled_image::laplacian_smoothing(float weight) {
-    points_final = std::vector<QPointF*>(points_step.size(), nullptr);
-
-    for(int i = 0; i < static_cast<int>(points.size()); i++) {
-
-        QPointF* real_point = points[i];
+void Trianguled_image::step_laplacian(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points, float weight)
+{
+    for(int i = 0; i < static_cast<int>(source_points.size()); i++) {
+        QPointF* real_point = dest_points[i];
         if((real_point->x() > 0 && real_point->x() < 1) && (real_point->y() > 0 && real_point->y() < 1)) {
-            QPointF ring_center = getBarycenter(i);
-            QPointF curr_point = *points_step[i];
+            QPointF ring_center = getBarycenter(i, source_points);
+            QPointF curr_point = *source_points[i];
             QPointF distance = (ring_center - curr_point);
             double new_x, new_y;
             new_x = curr_point.x() + weight * distance.x();
             new_y = curr_point.y() + weight * distance.y();
-            points_final[i] = new QPointF();
-            points_final[i]->setX(new_x);
-            points_final[i]->setY(new_y);
 
-            //check energy
-            //if new energy < old
-            real_point->setX(points_final[i]->x());
-            real_point->setY(points_final[i]->y());
+            real_point->setX(new_x);
+            real_point->setY(new_y);
         }
     }
 }
@@ -523,13 +549,13 @@ void Trianguled_image::addAdjacentTriangle(int i, int triangle){
 
 }
 
-QPointF Trianguled_image::getBarycenter(int i){
+QPointF Trianguled_image::getBarycenter(int i, std::vector<QPointF*> &source_points){
     double denom = 0.0;
     double nume_x = 0;
     double nume_y = 0;
     for(int j=0 ; j<static_cast<int>(neighbours[i].size()) ; j++){
-        nume_x += points_step[neighbours[i][j]]->x();
-        nume_y += points_step[neighbours[i][j]]->y();
+        nume_x += source_points[neighbours[i][j]]->x();
+        nume_y += source_points[neighbours[i][j]]->y();
         denom++;
     }
     double x = nume_x/denom;
@@ -563,7 +589,8 @@ void Trianguled_image::addPoints(){
                 addNeighbor((i+1)*n_y+j, i*n_y+j);
                 addNeighbor((i+1)*n_y+j, i*n_y+j+1);
 
-                int triangle_id = adjacent_triangles.size() - 1;
+                int triangle_id = tab_triangles.size() - 1;
+//                qInfo() << triangle_id;
                 addAdjacentTriangle(i*n_y+j, triangle_id);
                 addAdjacentTriangle(i*n_y+j+1, triangle_id);
                 addAdjacentTriangle((i+1)*n_y+j, triangle_id);
@@ -615,7 +642,7 @@ void Trianguled_image::reset(){
     saliencyMap = QImage();
     triangles = QImage();
     points.clear();
-    points_step.clear();
+    points_buffer.clear();
     points_final.clear();
     tab_triangles.clear();
     neighbours.clear();
@@ -717,26 +744,17 @@ QColor Trianguled_image::getTriangleColor(int p1, int p2, int p3) {
     return result;
 }
 
-double Trianguled_image::getTriangleError(int p1, int p2, int p3, bool use_point_step) {
+double Trianguled_image::getTriangleError(int p1, int p2, int p3, std::vector<QPointF*> &source_points) {
     QColor result(0,0,0);
     double error;
 
     QPoint a, b, c;
-    if(!use_point_step){
-        a.setX(static_cast<int>((points[p1])->x()*(image.width()-1)));
-        a.setY(static_cast<int>((points[p1])->y()*(image.height()-1)));
-        b.setX(static_cast<int>((points[p2])->x()*(image.width()-1)));
-        b.setY(static_cast<int>((points[p2])->y()*(image.height()-1)));
-        c.setX(static_cast<int>((points[p3])->x()*(image.width()-1)));
-        c.setY(static_cast<int>((points[p3])->y()*(image.height()-1)));
-    }else{
-        a.setX(static_cast<int>((points_step[p1])->x()*(image.width()-1)));
-        a.setY(static_cast<int>((points_step[p1])->y()*(image.height()-1)));
-        b.setX(static_cast<int>((points_step[p2])->x()*(image.width()-1)));
-        b.setY(static_cast<int>((points_step[p2])->y()*(image.height()-1)));
-        c.setX(static_cast<int>((points_step[p3])->x()*(image.width()-1)));
-        c.setY(static_cast<int>((points_step[p3])->y()*(image.height()-1)));
-    }
+    a.setX(static_cast<int>((source_points[p1])->x()*(image.width()-1)));
+    a.setY(static_cast<int>((source_points[p1])->y()*(image.height()-1)));
+    b.setX(static_cast<int>((source_points[p2])->x()*(image.width()-1)));
+    b.setY(static_cast<int>((source_points[p2])->y()*(image.height()-1)));
+    c.setX(static_cast<int>((source_points[p3])->x()*(image.width()-1)));
+    c.setY(static_cast<int>((source_points[p3])->y()*(image.height()-1)));
 
     QPoint p;
     QColor p_color;
@@ -771,46 +789,45 @@ double Trianguled_image::getTriangleError(int p1, int p2, int p3, bool use_point
 
     double sum_dist = 0;
     double true_color_value;
-    double mean_color_value = (result.redF() + result.blueF() + result.greenF()) / 3;
+    double mean_color_value = (result.redF() + result.blueF() + result.greenF()) / 3.0;
 
     for(int x = min_x; x <= max_x; x++) {
         for(int y = min_y; y <= max_y; y++) {
             p = QPoint(x, y);
             if (in_triangle(p, a, b, c)) {
                 p_color = backupImage.pixelColor(p);
-                true_color_value = (p_color.redF() + p_color.blueF() + p_color.greenF()) / 3;
+                true_color_value = (p_color.redF() + p_color.blueF() + p_color.greenF()) / 3.0;
                 sum_dist += (true_color_value - mean_color_value) * (true_color_value - mean_color_value);
             }
         }
     }
 
-    error = sum_dist / (2 * n_pixel);
+    error = sum_dist / static_cast<double>(n_pixel);
 
     return error;
 }
 
-double Trianguled_image::laplacian_dotproduct(int i){
+double Trianguled_image::laplacian_dotproduct(int i, std::vector<QPointF*> &source_points){
     double sum = 0;
-    QPointF* curr_point = points[i];
+    QPointF* curr_point = source_points[i];
     int n_neighbours = static_cast<int>(neighbours[i].size());
     for(int j=0 ; j < n_neighbours ; j++){
-        QPointF* curr_neighbour = points[neighbours[i][j]];
-
+        QPointF* curr_neighbour = source_points[neighbours[i][j]];
         QPointF distance = *curr_neighbour - *curr_point;
         sum += QPointF::dotProduct(distance, distance);
     }
 
-    return (sum / 2 * n_neighbours);
+    return (sum / 2.0 * static_cast<double>(n_neighbours));
 }
 
-double Trianguled_image::getPointError(int curr_point, bool use_point_step) {
+double Trianguled_image::getPointError(int curr_point, std::vector<QPointF*> &source_points) {
     Triangle* curr_t;
     double curr_err;
     double sum_error = 0;
     for (int adj_triangle_id : adjacent_triangles[curr_point]) {
         curr_t = tab_triangles[adj_triangle_id];
-        curr_err = getTriangleError(curr_t->getP1(), curr_t->getP2(), curr_t->getP3(), use_point_step) / 3;
-        curr_err += laplacian_value_test * laplacian_dotproduct(curr_point);
+        curr_err = getTriangleError(curr_t->getP1(), curr_t->getP2(), curr_t->getP3(), source_points) / 3.0;
+        curr_err += laplacian_value_test * laplacian_dotproduct(curr_point, source_points);
         sum_error += curr_err;
     }
 

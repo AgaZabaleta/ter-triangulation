@@ -33,8 +33,8 @@ public:
     void setN_xy(double percent=0.05);
     QColor getPointColor(int i);
     QColor getTriangleColor(int p1, int p2, int p3);
-    double getTriangleError(int p1, int p2, int p3, bool use_point_step);
-    double getPointError(int curr_point, bool use_point_step);
+    double getTriangleError(int p1, int p2, int p3, std::vector<QPointF*> &source_points);
+    double getPointError(int curr_point, std::vector<QPointF*> &source_points);
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -44,7 +44,7 @@ private:
     QImage backupImage; // Pour passer de gris à couleur
     QImage triangles;
     std::vector<QPointF*> points;
-    std::vector<QPointF*> points_step;
+    std::vector<QPointF*> points_buffer;
     std::vector<QPointF*> points_final;
     std::vector<Triangle*> tab_triangles;
     std::vector<std::vector<int>> neighbours;
@@ -56,23 +56,24 @@ private:
     int n_y;
     int n_x;
     int vision_range;
-    int cardinal_range = 20; // deplacement triangle error
+    int cardinal_range = 10; // deplacement triangle error
     void addNeighbor(int i, int j);
     void addAdjacentTriangle(int i, int triangle);
-    QPointF getBarycenter(int i);
+    QPointF getBarycenter(int i, std::vector<QPointF*> &source_points);
 
     void setVision_range();
     bool triangulate_step();
-    void point_error_step();
-    void laplacian_smoothing(float weight);
-    double laplacian_dotproduct(int i);
+    void step_saliency(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points);
+    void step_error(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points);
+    void step_laplacian(std::vector<QPointF*> &source_points, std::vector<QPointF*> &dest_points, float weight);
+    double laplacian_dotproduct(int i, std::vector<QPointF*> &source_points);
     QPoint getBestPoint(QPoint point);
 
     int getPointValue(QPoint point);
     QPoint getNextPoint(QPoint p_origin, QPoint p_best);
 
     // Test settings //
-    QString testImage = "C:/Users/basti/OneDrive/Bureau/panneau_stop.jpg";
+    QString testImage = "C:/Users/juj/Desktop/rond1.png";
     double percent_test = 0.05;
     double gradient_value_test = 1.0;
     double color_value_test = 0.0;

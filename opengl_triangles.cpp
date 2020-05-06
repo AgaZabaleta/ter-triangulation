@@ -97,7 +97,7 @@ int OpenGLTriangles::updateVertices(){
 
     std::vector<QPointF*> t_points = t_image->getPoints();
     QColor v_color = QColor();
-    qInfo() << "\ndessin opengl";
+    //qInfo() << "\ndessin opengl";
     for(Triangle* t : t_image->getTriangles()){
 
 //        double r = 0;
@@ -121,8 +121,8 @@ int OpenGLTriangles::updateVertices(){
 //        v_color.setGreenF(g / 3.0);
 //        v_color.setBlueF(b / 3.0);
         if(display_errors) {
-            double t_error = t_image->getTriangleError(t->getP1(), t->getP2(), t->getP3(), false);
-            qInfo() << t_error;
+            double t_error = t_image->getTriangleError(t->getP1(), t->getP2(), t->getP3(), t_points);
+//            qInfo() << "t_error: " << t_error;
             v_color.setHsvF(0.98 * t_error, 0.8, 0.8);
         } else {
             v_color = t_image->getTriangleColor(t->getP1(), t->getP2(), t->getP3());
