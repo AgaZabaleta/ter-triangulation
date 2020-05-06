@@ -115,7 +115,14 @@ void Trianguled_image::paintEvent(QPaintEvent *event)
 void Trianguled_image::switchImage(){
     if(!image.isNull() && !saliencyMap.isNull()) {
         if(image == backupImage){
-            image = saliencyMap;
+//            image = saliencyMap;
+            for(int i=0 ; i<saliencyMap.width() ; i++){
+                for(int j=0 ; j<saliencyMap.height() ; j++){
+                    QColor color_value = saliencyMap.pixelColor(i,j);
+                    color_value.setHsvF(0.98 * color_value.redF(), 0.8,0.8);
+                    image.setPixelColor(i, j, color_value);
+                }
+            }
         }else{
             image = backupImage;
         }
