@@ -234,12 +234,11 @@ QImage Trianguled_image::color_saliency(){
                 h*=255;
                 s*=255;
                 v*=255;
-                int value = static_cast<int>(sqrt(pow(h,2)+pow(s,2)+pow(v,2)));
-                if(value > 255){
-                    value = 255;
-                }
+                double value = sqrt(pow(h,2)+pow(s,2)+pow(v,2));
+                value = value / sqrt(pow(255,2)+pow(255,2)+pow(255,2)) * 255.0;
 
                 QRgb color = qRgb(static_cast<int>(value), static_cast<int>(value), static_cast<int>(value));
+                qInfo() << " " << h << " " << s << " " << v << " " << value ;
                 res.setPixel(i, j, color);
             }
         }
