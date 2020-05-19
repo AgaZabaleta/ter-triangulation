@@ -1,3 +1,4 @@
+#include <QFileDialog>
 #include "application.h"
 
 //! [0]
@@ -80,9 +81,8 @@ void Application::open()
 
 void Application::save()
 {
-    QAction *action = qobject_cast<QAction *>(sender());
-    QByteArray fileFormat = action->data().toByteArray();
-    saveFile(fileFormat);
+    QImage saveImage = opengl_area->grabFramebuffer();
+    saveImage.save(QFileDialog::getSaveFileName(this, "Sauvegarde"));
 }
 
 void Application::step()
